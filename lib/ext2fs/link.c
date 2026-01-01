@@ -203,6 +203,9 @@ static int link_proc(ext2_ino_t dir EXT2FS_ATTR((unused)),
 	if (ls->err)
 		return DIRENT_ABORT;
 
+	ECFS_DEBUG("curr_rec_len:%d rec_len=%d, offset=%d, ls->name=%s, name=%s dir=%d dirent->inode=%d",
+		curr_rec_len, rec_len, offset, ls->name, dirent->name, dir, dirent->inode);
+
 	if (ext2fs_has_feature_metadata_csum(ls->fs->super))
 		csum_size = sizeof(struct ext2_dir_entry_tail);
 	/*
@@ -210,13 +213,24 @@ static int link_proc(ext2_ino_t dir EXT2FS_ATTR((unused)),
 	 * if so, absorb it into this one.
 	 */
 	next = (struct ext2_dir_entry *) (buf + offset + curr_rec_len);
-	if ((offset + (int) curr_rec_len < blocksize - (8 + csum_size)) &&
+	ECFS_DEBUG("curr_rec_len=%d next->rec_len=%d name=%s dir=%d inode=%lu, next->inode=%d",
+		curr_rec_len,
+		next->rec_len,
+		dirent->name,
+		dir,
+		dirent->inode,
+		next->inode);
+	ECFS_DEBUG("offset + (int) curr_rec_len=%d < blocksize - (EXT2_DIR_ENTRY_HEADER_LEN + csum_size)=%d", offset + (int) curr_rec_len, blocksize - (EXT2_DIR_ENTRY_HEADER_LEN + csum_size));
+	ECFS_DEBUG("offset + (int) curr_rec_len + (int) next->rec_len=%d <= blocksize=%d", offset + (int) curr_rec_len + (int) next->rec_len, blocksize);
+	if ((offset + (int) curr_rec_len < blocksize - (EXT2_DIR_ENTRY_HEADER_LEN + csum_size)) &&
 	    (next->inode == 0) &&
 	    (offset + (int) curr_rec_len + (int) next->rec_len <= blocksize)) {
 		curr_rec_len += next->rec_len;
 		ls->err = ext2fs_set_rec_len(ls->fs, curr_rec_len, dirent);
 		if (ls->err)
 			return DIRENT_ABORT;
+
+		ECFS_DEBUG("curr_rec_len:%d next->rec_len=%d, name=%s dir=%d dirent->inode=%d", curr_rec_len, next->rec_len, dirent->name, dir, dirent->inode);
 		ret = DIRENT_CHANGED;
 	}
 
@@ -227,20 +241,23 @@ static int link_proc(ext2_ino_t dir EXT2FS_ATTR((unused)),
 	 */
 	if (dirent->inode) {
 		min_rec_len = EXT2_DIR_REC_LEN(ext2fs_dirent_name_len(dirent));
+		ECFS_DEBUG("curr_rec_len:%d rec_len=%d, name=%s min_rec_len=%d dir=%d dirent->inode=%d", curr_rec_len, rec_len,  dirent->name, min_rec_len, dir, dirent->inode);
 		if (curr_rec_len < (min_rec_len + rec_len))
-			return ret;
+			return ret; // if current entry is not the last one, try next,  the last one buffer all remain space.
 		rec_len = curr_rec_len - min_rec_len;
-		ls->err = ext2fs_set_rec_len(ls->fs, min_rec_len, dirent);
+		ls->err = ext2fs_set_rec_len(ls->fs, min_rec_len, dirent); // set real len to the last one.
 		if (ls->err)
 			return DIRENT_ABORT;
 		next = (struct ext2_dir_entry *) (buf + offset +
 						  dirent->rec_len);
+		// here prepare the unused directory entry, that means split the last buffer one.
 		next->inode = 0;
 		ext2fs_dirent_set_name_len(next, 0);
 		ext2fs_dirent_set_file_type(next, 0);
-		ls->err = ext2fs_set_rec_len(ls->fs, rec_len, next);
+		ls->err = ext2fs_set_rec_len(ls->fs, rec_len, next); // set the unused directory entry the remain len
 		if (ls->err)
 			return DIRENT_ABORT;
+		ECFS_DEBUG("curr_rec_len:%d rec_len=%d, name=%s dir=%d dirent->inode=%d", curr_rec_len, rec_len, dirent->name, dir, dirent->inode);
 		return DIRENT_CHANGED;
 	}
 
@@ -250,14 +267,17 @@ static int link_proc(ext2_ino_t dir EXT2FS_ATTR((unused)),
 	 */
 	if (curr_rec_len < rec_len)
 		return ret;
+	// save the entry here, since this is the last one, the len is the total buffer set above, no need to update.
 	dirent->inode = ls->inode;
 	ext2fs_dirent_set_name_len(dirent, ls->namelen);
 	strncpy(dirent->name, ls->name, ls->namelen);
+	ECFS_DEBUG("curr_rec_len:%d rec_len=%d, dirent->name=%s dirent->inode=%d ls->namelen=%d", curr_rec_len, rec_len, dirent->name, dirent->inode, ls->namelen);
 	if (ext2fs_has_feature_filetype(ls->sb))
 		ext2fs_dirent_set_file_type(dirent,
 					    ls->flags & EXT2FS_LINK_FT_MASK);
 
 	ls->done++;
+	ECFS_DEBUG("curr_rec_len:%d rec_len=%d, name=%s dir=%d dirent->inode=%d", curr_rec_len, rec_len, dirent->name, dir, dirent->inode);
 	return DIRENT_ABORT|DIRENT_CHANGED;
 }
 
@@ -655,10 +675,12 @@ retry:
 		if (retval)
 			return retval;
 
+		ECFS_DEBUG("ino=%d, name=%s",ino, name);
 		ext2fs_process_dir_block(fs, &pblk, lblk, 0, 0, &ctx);
 		retval = ctx.errcode;
 		ext2fs_free_mem(&ctx.buf);
 	} else {
+		ECFS_DEBUG("ino=%d, name=%s", ino, name);
 		retval = ext2fs_dir_iterate2(fs, dir,
 					     DIRENT_FLAG_INCLUDE_EMPTY,
 					     NULL, link_proc, &ls);

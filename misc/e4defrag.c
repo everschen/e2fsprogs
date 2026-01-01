@@ -101,7 +101,7 @@
 #define SHOW_FRAG_FILES	5
 
 /* Magic number for ext4 */
-#define EXT4_SUPER_MAGIC	0xEF53
+#define EXT4_SUPER_MAGIC	0xECF3
 
 /* Definition of flex_bg */
 #define EXT4_FEATURE_INCOMPAT_FLEX_BG		0x0200

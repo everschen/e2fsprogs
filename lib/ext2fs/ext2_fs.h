@@ -80,7 +80,7 @@
 /*
  * The second extended file system magic number
  */
-#define EXT2_SUPER_MAGIC	0xEF53
+#define EXT2_SUPER_MAGIC	0xECF3
 
 #ifdef __KERNEL__
 #define EXT2_SB(sb)	(&((sb)->u.ext2_sb))
@@ -774,7 +774,9 @@ struct ext2_super_block {
 /*27c*/ __le16	s_encoding;		/* Filename charset encoding */
 	__le16	s_encoding_flags;	/* Filename charset encoding flags */
 	__le32  s_orphan_file_inum;	/* Inode for tracking orphan inodes */
-	__le32	s_reserved[94];		/* Padding to the end of the block */
+	__le16  s_node_id;	/* node id, start from 1 */
+	__le16  s_disk_id;	/* disk id, start form 0 */
+	__le32	s_reserved[93];		/* Padding to the end of the block */
 /*3fc*/	__u32	s_checksum;		/* crc32c(superblock) */
 };
 
@@ -1019,7 +1021,7 @@ static inline int ext4_hash_in_dirent(const struct ext2_inode *inode)
 #define EXT2_NAME_LEN 255
 
 struct ext2_dir_entry {
-	__u32	inode;			/* Inode number */
+	__u64	inode;			/* Inode number */
 	__u16	rec_len;		/* Directory entry length */
 	__u16	name_len;		/* Name length */
 	char	name[EXT2_NAME_LEN];	/* File name */
@@ -1040,7 +1042,7 @@ struct ext2_dir_entry {
  * to get and set name_len and file_type fields.
  */
 struct ext2_dir_entry_2 {
-	__u32	inode;			/* Inode number */
+	__u64	inode;			/* Inode number */
 	__u16	rec_len;		/* Directory entry length */
 	__u8	name_len;		/* Name length */
 	__u8	file_type;
@@ -1071,8 +1073,8 @@ struct ext2_dir_entry_hash {
  * records checksums.
  */
 struct ext2_dir_entry_tail {
-	__u32	det_reserved_zero1;	/* Pretend to be unused */
-	__u16	det_rec_len;		/* 12 */
+	__u64	det_reserved_zero1;	/* Pretend to be unused */
+	__u16	det_rec_len;		/* 16 */
 	__u16	det_reserved_name_len;	/* 0xDE00, fake namelen/filetype */
 	__u32	det_checksum;		/* crc32c(uuid+inode+dirent) */
 };
@@ -1105,11 +1107,32 @@ struct ext2_dir_entry_tail {
  *
  * NOTE: It must be a multiple of 4
  */
-#define EXT2_DIR_ENTRY_HEADER_LEN	8
+#define EXT2_DIR_ENTRY_HEADER_LEN	12
 #define EXT2_DIR_ENTRY_HASH_LEN		8
 #define EXT2_DIR_PAD			4
 #define EXT2_DIR_ROUND			(EXT2_DIR_PAD - 1)
 #define EXT2_DIR_REC_LEN(name_len) ext2fs_dir_rec_len(name_len, 0)
+
+
+
+/*
+ * Debug code
+ */
+
+#define ECFS_DEBUG_ENABLE
+//#undef ECFS_DEBUG_ENABLE
+
+#ifdef ECFS_DEBUG_ENABLE
+#define ECFS_DEBUG(...) \
+    do { \
+        fprintf(stderr, "ECFS e2fs debug %s:%d: ", __FUNCTION__, __LINE__); \
+        fprintf(stderr, __VA_ARGS__); \
+        fprintf(stderr, "\n\n"); \
+    } while(0)
+#else
+#define ECFS_DEBUG(...)	do {} while (0)
+#endif
+
 
 static inline unsigned int ext2fs_dir_rec_len(__u8 name_len,
 						int extended)
@@ -1196,7 +1219,7 @@ struct mmp_struct {
 /*
  * Size of a parent inode in inline data directory.
  */
-#define EXT4_INLINE_DATA_DOTDOT_SIZE	(4)
+#define EXT4_INLINE_DATA_DOTDOT_SIZE	(8)
 
 #define EXT4_ENC_UTF8_12_1	1
 

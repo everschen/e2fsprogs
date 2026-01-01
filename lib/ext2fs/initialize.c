@@ -165,6 +165,9 @@ errcode_t ext2fs_initialize(const char *name, int flags,
 	super->s_magic = EXT2_SUPER_MAGIC;
 	super->s_state = EXT2_VALID_FS;
 
+	super->s_node_id = 1;
+	super->s_disk_id = 0;
+
 	bigalloc_flag = ext2fs_has_feature_bigalloc(param);
 
 	assign_field(s_log_block_size);

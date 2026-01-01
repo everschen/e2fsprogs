@@ -55,6 +55,7 @@ errcode_t ext2fs_mkdir2(ext2_filsys fs, ext2_ino_t parent, ext2_ino_t ino,
 	    ext2fs_has_feature_inline_data(fs->super))
 		inline_data = 1;
 
+	ECFS_DEBUG("parent:%d ino=%d, name=%s, inline_data=%d link_flags=%d", parent, ino, name, inline_data, link_flags);
 	/*
 	 * Allocate an inode, if necessary
 	 */
@@ -72,6 +73,7 @@ errcode_t ext2fs_mkdir2(ext2_filsys fs, ext2_ino_t parent, ext2_ino_t ino,
 	 */
 	memset(&inode, 0, sizeof(struct ext2_inode));
 	if (!inline_data) {
+		ECFS_DEBUG("parent:%d ino=%d, name=%s, inline_data=%d", parent, ino, name, inline_data);
 		retval = ext2fs_new_block2(fs, ext2fs_find_inode_goal(fs, ino,
 								      &inode,
 								      0),
@@ -116,6 +118,7 @@ errcode_t ext2fs_mkdir2(ext2_filsys fs, ext2_ino_t parent, ext2_ino_t ino,
 			inode.i_block[0] = blk;
 		inode.i_size = fs->blocksize;
 		ext2fs_iblk_set(fs, &inode, 1);
+		ECFS_DEBUG("parent:%d ino=%d, name=%s, inline_data=%d", parent, ino, name, inline_data);
 	}
 	inode.i_flags |= flags & (EXT2_FL_USER_MODIFIABLE & ~EXT4_EXTENTS_FL);
 	inode.i_links_count = 2;
@@ -170,6 +173,7 @@ errcode_t ext2fs_mkdir2(ext2_filsys fs, ext2_ino_t parent, ext2_ino_t ino,
 			goto cleanup;
 		retval = ext2fs_link(fs, parent, name, ino,
 				     EXT2_FT_DIR | link_flags);
+		ECFS_DEBUG("parent:%d ino=%d, name=%s, inline_data=%d", parent, ino, name, inline_data);
 		if (retval)
 			goto cleanup;
 	}

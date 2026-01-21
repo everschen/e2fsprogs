@@ -89,7 +89,7 @@ errcode_t ext2fs_inode_io_intern2(ext2_filsys fs, ext2_ino_t ino,
 				     &data)))
 		return retval;
 	data->magic = EXT2_ET_MAGIC_INODE_IO_CHANNEL;
-	sprintf(data->name, "%u:%d", ino, ino_unique++);
+	sprintf(data->name, "%llu:%d", ino, ino_unique++);
 	data->file = 0;
 	data->fs = fs;
 	data->ino = ino;

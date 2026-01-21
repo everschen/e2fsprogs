@@ -92,7 +92,7 @@ errcode_t add_link(ext2_filsys fs, ext2_ino_t parent_ino,
 
 	retval = ext2fs_read_inode(fs, ino, &inode);
         if (retval) {
-		com_err(__func__, retval, _("while reading inode %u"), ino);
+		com_err(__func__, retval, _("while reading inode %llu"), ino);
 		return retval;
 	}
 
@@ -107,7 +107,7 @@ errcode_t add_link(ext2_filsys fs, ext2_ino_t parent_ino,
 
 	retval = ext2fs_write_inode(fs, ino, &inode);
 	if (retval)
-		com_err(__func__, retval, _("while writing inode %u"), ino);
+		com_err(__func__, retval, _("while writing inode %llu"), ino);
 
 	return retval;
 }
@@ -128,7 +128,7 @@ errcode_t set_inode_extra(ext2_filsys fs, ext2_ino_t ino,
 
 	retval = ext2fs_read_inode(fs, ino, &inode);
         if (retval) {
-		com_err(__func__, retval, _("while reading inode %u"), ino);
+		com_err(__func__, retval, _("while reading inode %llu"), ino);
 		return retval;
 	}
 
@@ -143,7 +143,7 @@ errcode_t set_inode_extra(ext2_filsys fs, ext2_ino_t ino,
 
 	retval = ext2fs_write_inode(fs, ino, &inode);
 	if (retval)
-		com_err(__func__, retval, _("while writing inode %u"), ino);
+		com_err(__func__, retval, _("while writing inode %llu"), ino);
 	return retval;
 }
 
@@ -173,14 +173,14 @@ static errcode_t set_inode_xattr(ext2_filsys fs, ext2_ino_t ino,
 	if (retval) {
 		if (retval == EXT2_ET_MISSING_EA_FEATURE)
 			return 0;
-		com_err(__func__, retval, _("while opening inode %u"), ino);
+		com_err(__func__, retval, _("while opening inode %llu"), ino);
 		return retval;
 	}
 
 	retval = ext2fs_xattrs_read(handle);
 	if (retval) {
 		com_err(__func__, retval,
-			_("while reading xattrs for inode %u"), ino);
+			_("while reading xattrs for inode %llu"), ino);
 		goto out;
 	}
 
@@ -231,7 +231,7 @@ static errcode_t set_inode_xattr(ext2_filsys fs, ext2_ino_t ino,
 		ext2fs_free_mem(&value);
 		if (retval) {
 			com_err(__func__, retval,
-				_("while writing attribute \"%s\" to inode %u"),
+				_("while writing attribute \"%s\" to inode %llu"),
 				name, ino);
 			break;
 		}
@@ -241,7 +241,7 @@ static errcode_t set_inode_xattr(ext2_filsys fs, ext2_ino_t ino,
 	ext2fs_free_mem(&list);
 	close_retval = ext2fs_xattrs_close(&handle);
 	if (close_retval) {
-		com_err(__func__, retval, _("while closing inode %u"), ino);
+		com_err(__func__, retval, _("while closing inode %llu"), ino);
 		retval = retval ? retval : close_retval;
 	}
 	return retval;
@@ -298,7 +298,7 @@ errcode_t do_mknod_internal(ext2_filsys fs, ext2_ino_t cwd, const char *name,
 	}
 
 #ifdef DEBUGFS
-	printf("Allocated inode: %u\n", ino);
+	printf("Allocated inode: %llu\n", ino);
 #endif
 	retval = ext2fs_link(fs, cwd, name, ino, filetype | link_append_flag);
 	if (retval) {
@@ -332,7 +332,7 @@ errcode_t do_mknod_internal(ext2_filsys fs, ext2_ino_t cwd, const char *name,
 
 	retval = ext2fs_write_new_inode(fs, ino, &inode);
 	if (retval)
-		com_err(__func__, retval, _("while writing inode %u"), ino);
+		com_err(__func__, retval, _("while writing inode %llu"), ino);
 
 	return retval;
 }
@@ -812,7 +812,7 @@ errcode_t do_write_internal(ext2_filsys fs, ext2_ino_t cwd, const char *src,
 	if (retval)
 		goto out;
 #ifdef DEBUGFS
-	printf("Allocated inode: %u\n", newfile);
+	printf("Allocated inode: %llu\n", newfile);
 #endif
 	retval = ext2fs_link(fs, parent_ino, dest, newfile,
 			     EXT2_FT_REG_FILE | link_append_flag);

@@ -113,7 +113,7 @@ static int list_dir_proc(ext2_ino_t dir EXT2FS_ATTR((unused)),
 				return 0;
 		} else
 			memset(&inode, 0, sizeof(struct ext2_inode));
-		fprintf(ls->f,"/%u/%06o/%d/%d/%.*s/", ino, inode.i_mode,
+		fprintf(ls->f,"/%llu/%06o/%d/%d/%.*s/", ino, inode.i_mode,
 			inode_uid(inode), inode_gid(inode), thislen, dirent->name);
 		if (LINUX_S_ISDIR(inode.i_mode))
 			fprintf(ls->f, "/");
@@ -135,7 +135,7 @@ static int list_dir_proc(ext2_ino_t dir EXT2FS_ATTR((unused)),
 			strcpy(datestr, "                 ");
 			memset(&inode, 0, sizeof(struct ext2_inode));
 		}
-		fprintf(ls->f, "%c%6u%c %6o ", lbr, ino, rbr, inode.i_mode);
+		fprintf(ls->f, "%c%6llu%c %6o ", lbr, ino, rbr, inode.i_mode);
 		if (entry == DIRENT_CHECKSUM) {
 			fprintf(ls->f, "(dirblock checksum: 0x%08x)\n",
 				t->det_checksum);
@@ -151,7 +151,7 @@ static int list_dir_proc(ext2_ino_t dir EXT2FS_ATTR((unused)),
 		fputc('\n', ls->f);
 	} else {
 		if (entry == DIRENT_CHECKSUM) {
-			sprintf(tmp, "%c%u%c (dirblock checksum: 0x%08x)   ",
+			sprintf(tmp, "%c%llu%c (dirblock checksum: 0x%08x)   ",
 				lbr, dirent->inode, rbr, t->det_checksum);
 			thislen = strlen(tmp);
 			if (ls->col + thislen > 80) {
@@ -162,7 +162,7 @@ static int list_dir_proc(ext2_ino_t dir EXT2FS_ATTR((unused)),
 			ls->col += thislen;
 			return 0;
 		}
-		sprintf(tmp, "%c%u%c (%d) ", lbr, dirent->inode, rbr,
+		sprintf(tmp, "%c%llu%c (%d) ", lbr, dirent->inode, rbr,
 			dirent->rec_len);
 		thislen = strlen(tmp) + 3;
 		thislen += print_filename(NULL, dirent, options);

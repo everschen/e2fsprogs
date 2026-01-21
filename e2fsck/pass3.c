@@ -618,7 +618,7 @@ int e2fsck_reconnect_file(e2fsck_t ctx, ext2_ino_t ino)
 		return 1;
 	}
 
-	sprintf(name, "#%u", ino);
+	sprintf(name, "#%llu", ino);
 	if (ext2fs_read_inode(fs, ino, &inode) == 0)
 		file_type = ext2_file_type(inode.i_mode);
 	retval = ext2fs_link(fs, ctx->lost_and_found, name, ino, file_type);

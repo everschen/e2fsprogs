@@ -30,16 +30,16 @@
 /*
  * Helper function for making a badblocks list
  */
-static errcode_t make_u32_list(int size, int num, __u32 *list,
-			       ext2_u32_list *ret)
+static errcode_t make_u64_list(int size, int num, __u64 *list,
+			       ext2_u64_list *ret)
 {
-	ext2_u32_list	bb;
+	ext2_u64_list	bb;
 	errcode_t	retval;
 
-	retval = ext2fs_get_mem(sizeof(struct ext2_struct_u32_list), &bb);
+	retval = ext2fs_get_mem(sizeof(struct ext2_struct_u64_list), &bb);
 	if (retval)
 		return retval;
-	memset(bb, 0, sizeof(struct ext2_struct_u32_list));
+	memset(bb, 0, sizeof(struct ext2_struct_u64_list));
 	bb->magic = EXT2_ET_MAGIC_BADBLOCKS_LIST;
 	bb->size = size ? size : 10;
 	bb->num = num;
@@ -60,9 +60,9 @@ static errcode_t make_u32_list(int size, int num, __u32 *list,
 /*
  * This procedure creates an empty u32 list.
  */
-errcode_t ext2fs_u32_list_create(ext2_u32_list *ret, int size)
+errcode_t ext2fs_u32_list_create(ext2_u64_list *ret, int size)
 {
-	return make_u32_list(size, 0, 0, ret);
+	return make_u64_list(size, 0, 0, ret);
 }
 
 /*
@@ -70,18 +70,18 @@ errcode_t ext2fs_u32_list_create(ext2_u32_list *ret, int size)
  */
 errcode_t ext2fs_badblocks_list_create(ext2_badblocks_list *ret, int size)
 {
-	return make_u32_list(size, 0, 0, (ext2_badblocks_list *) ret);
+	return make_u64_list(size, 0, 0, (ext2_badblocks_list *) ret);
 }
 
 
 /*
  * This procedure copies a badblocks list
  */
-errcode_t ext2fs_u32_copy(ext2_u32_list src, ext2_u32_list *dest)
+errcode_t ext2fs_u64_copy(ext2_u64_list src, ext2_u64_list *dest)
 {
 	errcode_t	retval;
 
-	retval = make_u32_list(src->size, src->num, src->list, dest);
+	retval = make_u64_list(src->size, src->num, src->list, dest);
 	if (retval)
 		return retval;
 	(*dest)->badblocks_flags = src->badblocks_flags;
@@ -91,8 +91,8 @@ errcode_t ext2fs_u32_copy(ext2_u32_list src, ext2_u32_list *dest)
 errcode_t ext2fs_badblocks_copy(ext2_badblocks_list src,
 				ext2_badblocks_list *dest)
 {
-	return ext2fs_u32_copy((ext2_u32_list) src,
-			       (ext2_u32_list *) dest);
+	return ext2fs_u64_copy((ext2_u64_list) src,
+			       (ext2_u64_list *) dest);
 }
 
 /*
@@ -105,7 +105,7 @@ errcode_t ext2fs_badblocks_copy(ext2_badblocks_list src,
 /*
  * This procedure adds an item to a tracking list (e.g. badblocks or casefold).
  */
-errcode_t ext2fs_u32_list_add(ext2_u32_list bb, __u32 blk)
+errcode_t ext2fs_u32_list_add(ext2_u64_list bb, __u32 blk)
 {
 	errcode_t	retval;
 	int		i, j;
@@ -153,14 +153,14 @@ errcode_t ext2fs_u32_list_add(ext2_u32_list bb, __u32 blk)
 
 errcode_t ext2fs_badblocks_list_add(ext2_badblocks_list bb, blk_t blk)
 {
-	return ext2fs_u32_list_add((ext2_u32_list) bb, (__u32) blk);
+	return ext2fs_u32_list_add((ext2_u64_list) bb, (__u32) blk);
 }
 
 /*
  * This procedure finds a particular block is on a badblocks
  * list.
  */
-int ext2fs_u32_list_find(ext2_u32_list bb, __u32 blk)
+int ext2fs_u32_list_find(ext2_u64_list bb, __u32 blk)
 {
 	int	low, high, mid;
 
@@ -195,7 +195,7 @@ int ext2fs_u32_list_find(ext2_u32_list bb, __u32 blk)
  * This procedure tests to see if a particular block is on a badblocks
  * list.
  */
-int ext2fs_u32_list_test(ext2_u32_list bb, __u32 blk)
+int ext2fs_u64_list_test(ext2_u64_list bb, __u64 blk)
 {
 	if (ext2fs_u32_list_find(bb, blk) < 0)
 		return 0;
@@ -205,14 +205,14 @@ int ext2fs_u32_list_test(ext2_u32_list bb, __u32 blk)
 
 int ext2fs_badblocks_list_test(ext2_badblocks_list bb, blk_t blk)
 {
-	return ext2fs_u32_list_test((ext2_u32_list) bb, (__u32) blk);
+	return ext2fs_u64_list_test((ext2_u64_list) bb, (__u32) blk);
 }
 
 
 /*
  * Remove a block from the badblock list
  */
-int ext2fs_u32_list_del(ext2_u32_list bb, __u32 blk)
+int ext2fs_u32_list_del(ext2_u64_list bb, __u32 blk)
 {
 	int	remloc, i;
 
@@ -229,20 +229,20 @@ int ext2fs_u32_list_del(ext2_u32_list bb, __u32 blk)
 	return 0;
 }
 
-void ext2fs_badblocks_list_del(ext2_u32_list bb, __u32 blk)
+void ext2fs_badblocks_list_del(ext2_u64_list bb, __u32 blk)
 {
 	ext2fs_u32_list_del(bb, blk);
 }
 
-errcode_t ext2fs_u32_list_iterate_begin(ext2_u32_list bb,
-					ext2_u32_iterate *ret)
+errcode_t ext2fs_u64_list_iterate_begin(ext2_u64_list bb,
+					ext2_u64_iterate *ret)
 {
-	ext2_u32_iterate iter;
+	ext2_u64_iterate iter;
 	errcode_t		retval;
 
 	EXT2_CHECK_MAGIC(bb, EXT2_ET_MAGIC_BADBLOCKS_LIST);
 
-	retval = ext2fs_get_mem(sizeof(struct ext2_struct_u32_iterate), &iter);
+	retval = ext2fs_get_mem(sizeof(struct ext2_struct_u64_iterate), &iter);
 	if (retval)
 		return retval;
 
@@ -256,14 +256,14 @@ errcode_t ext2fs_u32_list_iterate_begin(ext2_u32_list bb,
 errcode_t ext2fs_badblocks_list_iterate_begin(ext2_badblocks_list bb,
 					      ext2_badblocks_iterate *ret)
 {
-	return ext2fs_u32_list_iterate_begin((ext2_u32_list) bb,
-					      (ext2_u32_iterate *) ret);
+	return ext2fs_u64_list_iterate_begin((ext2_u64_list) bb,
+					      (ext2_u64_iterate *) ret);
 }
 
 
-int ext2fs_u32_list_iterate(ext2_u32_iterate iter, __u32 *blk)
+int ext2fs_u64_list_iterate(ext2_u64_iterate iter, __u64 *blk)
 {
-	ext2_u32_list	bb;
+	ext2_u64_list	bb;
 
 	if (iter->magic != EXT2_ET_MAGIC_BADBLOCKS_ITERATE)
 		return 0;
@@ -283,12 +283,12 @@ int ext2fs_u32_list_iterate(ext2_u32_iterate iter, __u32 *blk)
 
 int ext2fs_badblocks_list_iterate(ext2_badblocks_iterate iter, blk_t *blk)
 {
-	return ext2fs_u32_list_iterate((ext2_u32_iterate) iter,
-				       (__u32 *) blk);
+	return ext2fs_u64_list_iterate((ext2_u64_iterate) iter,
+				       (__u64 *) blk);
 }
 
 
-void ext2fs_u32_list_iterate_end(ext2_u32_iterate iter)
+void ext2fs_u64_list_iterate_end(ext2_u64_iterate iter)
 {
 	if (!iter || (iter->magic != EXT2_ET_MAGIC_BADBLOCKS_ITERATE))
 		return;
@@ -299,11 +299,11 @@ void ext2fs_u32_list_iterate_end(ext2_u32_iterate iter)
 
 void ext2fs_badblocks_list_iterate_end(ext2_badblocks_iterate iter)
 {
-	ext2fs_u32_list_iterate_end((ext2_u32_iterate) iter);
+	ext2fs_u64_list_iterate_end((ext2_u64_iterate) iter);
 }
 
 
-int ext2fs_u32_list_equal(ext2_u32_list bb1, ext2_u32_list bb2)
+int ext2fs_u32_list_equal(ext2_u64_list bb1, ext2_u64_list bb2)
 {
 	EXT2_CHECK_MAGIC(bb1, EXT2_ET_MAGIC_BADBLOCKS_LIST);
 	EXT2_CHECK_MAGIC(bb2, EXT2_ET_MAGIC_BADBLOCKS_LIST);
@@ -318,11 +318,11 @@ int ext2fs_u32_list_equal(ext2_u32_list bb1, ext2_u32_list bb2)
 
 int ext2fs_badblocks_equal(ext2_badblocks_list bb1, ext2_badblocks_list bb2)
 {
-	return ext2fs_u32_list_equal((ext2_u32_list) bb1,
-				     (ext2_u32_list) bb2);
+	return ext2fs_u32_list_equal((ext2_u64_list) bb1,
+				     (ext2_u64_list) bb2);
 }
 
-int ext2fs_u32_list_count(ext2_u32_list bb)
+int ext2fs_u32_list_count(ext2_u64_list bb)
 {
 	return bb->num;
 }

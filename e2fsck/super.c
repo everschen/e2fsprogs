@@ -221,7 +221,7 @@ static int release_inode_blocks(e2fsck_t ctx, ext2_ino_t ino,
 				      block_buf, release_inode_block, &pb);
 	if (retval) {
 		com_err("release_inode_blocks", retval,
-			_("while calling ext2fs_block_iterate for inode %u"),
+			_("while calling ext2fs_block_iterate for inode %llu"),
 			ino);
 		return 1;
 	}
@@ -246,7 +246,7 @@ release_acl:
 		}
 		if (retval) {
 			com_err("release_inode_blocks", retval,
-		_("while calling ext2fs_adjust_ea_refcount2 for inode %u"),
+		_("while calling ext2fs_adjust_ea_refcount2 for inode %llu"),
 				ino);
 			return 1;
 		}
@@ -277,7 +277,7 @@ static errcode_t e2fsck_read_all_quotas(e2fsck_t ctx)
 		return retval;
 
 	for (qtype = 0 ; qtype < MAXQUOTAS; qtype++) {
-		qf_ino = *quota_sb_inump(ctx->fs->super, qtype);
+		qf_ino = quota_sb_inum(ctx->fs->super, qtype);
 		if (qf_ino == 0)
 			continue;
 
@@ -459,7 +459,7 @@ static int process_orphan_file(e2fsck_t ctx, char *block_buf)
 	retval = ext2fs_read_inode(fs, orphan_inum, &orphan_inode);
 	if (retval < 0) {
 		com_err("process_orphan_file", retval,
-			_("while reading inode %d"), orphan_inum);
+			_("while reading inode %lld"), orphan_inum);
 		ret = 1;
 		goto out;
 	}
@@ -481,7 +481,7 @@ static int process_orphan_file(e2fsck_t ctx, char *block_buf)
 				       orphan_buf, process_orphan_block, &pd);
 	if (retval) {
 		com_err("process_orphan_block", retval,
-			_("while calling ext2fs_block_iterate for inode %d"),
+			_("while calling ext2fs_block_iterate for inode %lld"),
 			orphan_inum);
 		ret = 1;
 		goto out;
@@ -489,7 +489,7 @@ static int process_orphan_file(e2fsck_t ctx, char *block_buf)
 	if (pd.abort) {
 		if (pd.errcode) {
 			com_err("process_orphan_block", pd.errcode,
-				_("while reading blocks of inode %d"),
+				_("while reading blocks of inode %lld"),
 				orphan_inum);
 		}
 		ret = 1;
@@ -689,7 +689,7 @@ int check_init_orphan_file(e2fsck_t ctx)
 				       orphan_buf, reinit_orphan_block, &pd);
 	if (retval) {
 		com_err("reinit_orphan_block", retval,
-			_("while calling ext2fs_block_iterate for inode %d"),
+			_("while calling ext2fs_block_iterate for inode %lld"),
 			orphan_inum);
 		ret = 1;
 		goto out;
@@ -697,7 +697,7 @@ int check_init_orphan_file(e2fsck_t ctx)
 	if (pd.abort) {
 		if (pd.errcode) {
 			com_err("process_orphan_block", pd.errcode,
-				_("while reading blocks of inode %d"),
+				_("while reading blocks of inode %lld"),
 				orphan_inum);
 		}
 		ret = 1;

@@ -835,7 +835,7 @@ void internal_dump_inode(FILE *out, const char *prefix,
 	else if (LINUX_S_ISFIFO(inode->i_mode)) i_type = "FIFO";
 	else if (LINUX_S_ISSOCK(inode->i_mode)) i_type = "socket";
 	else i_type = "bad type";
-	fprintf(out, "%sInode: %u   Type: %s    ", prefix, inode_num, i_type);
+	fprintf(out, "%sInode: %llu   Type: %s    ", prefix, inode_num, i_type);
 	fprintf(out, "%sMode:  0%03o   Flags: 0x%x\n",
 		prefix, inode->i_mode & 07777, inode->i_flags);
 	if (ext2fs_inode_includes(inode_size, i_version_hi)) {
@@ -1213,9 +1213,9 @@ void do_testi(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused)),
 		return;
 
 	if (ext2fs_test_inode_bitmap2(current_fs->inode_map,inode))
-		printf("Inode %u is marked in use\n", inode);
+		printf("Inode %llu is marked in use\n", inode);
 	else
-		printf("Inode %u is not in use\n", inode);
+		printf("Inode %llu is not in use\n", inode);
 }
 
 #ifndef READ_ONLY
@@ -1324,6 +1324,28 @@ static void modify_u16(char *com, const char *prompt,
 		*val = v;
 }
 
+static void modify_u64(char *com, const char *prompt,
+		       const char *format, __u64 *val)
+{
+	char buf[200];
+	unsigned long v;
+	char *tmp;
+
+	sprintf(buf, format, *val);
+	printf("%30s    [%s] ", prompt, buf);
+	if (!fgets(buf, sizeof(buf), stdin))
+		return;
+	if (buf[strlen (buf) - 1] == '\n')
+		buf[strlen (buf) - 1] = '\0';
+	if (!buf[0])
+		return;
+	v = strtoul(buf, &tmp, 0);
+	if (*tmp)
+		com_err(com, 0, "Bad value - %s", buf);
+	else
+		*val = v;
+}
+
 static void modify_u32(char *com, const char *prompt,
 		       const char *format, __u32 *val)
 {
@@ -1345,7 +1367,6 @@ static void modify_u32(char *com, const char *prompt,
 	else
 		*val = v;
 }
-
 
 void do_modify_inode(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused)),
 		     void *infop EXT2FS_ATTR((unused)))
@@ -1385,7 +1406,7 @@ void do_modify_inode(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused))
 	modify_u32(argv[0], "File flags", hex_format, &inode.i_flags);
 	modify_u32(argv[0], "Generation", hex_format, &inode.i_generation);
 #if 0
-	modify_u32(argv[0], "Reserved1", decimal_format, &inode.i_reserved1);
+	modify_u64(argv[0], "Reserved1", decimal_format, &inode.i_reserved1);
 #endif
 	modify_u32(argv[0], "File acl", decimal_format, &inode.i_file_acl);
 
@@ -1412,13 +1433,13 @@ void do_modify_inode(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused))
 
 	for (i=0;  i < EXT2_NDIR_BLOCKS; i++) {
 		sprintf(buf, "Direct Block #%u", i);
-		modify_u32(argv[0], buf, decimal_format, &inode.i_block[i]);
+		modify_u64(argv[0], buf, decimal_format, &inode.i_block[i]);
 	}
-	modify_u32(argv[0], "Indirect Block", decimal_format,
+	modify_u64(argv[0], "Indirect Block", decimal_format,
 		    &inode.i_block[EXT2_IND_BLOCK]);
-	modify_u32(argv[0], "Double Indirect Block", decimal_format,
+	modify_u64(argv[0], "Double Indirect Block", decimal_format,
 		    &inode.i_block[EXT2_DIND_BLOCK]);
-	modify_u32(argv[0], "Triple Indirect Block", decimal_format,
+	modify_u64(argv[0], "Triple Indirect Block", decimal_format,
 		    &inode.i_block[EXT2_TIND_BLOCK]);
 	if (debugfs_write_inode(inode_num, &inode, argv[1]))
 		return;
@@ -1460,7 +1481,7 @@ void do_print_working_directory(int argc, ss_argv_t argv,
 		com_err(argv[0], retval,
 			"while trying to get pathname of cwd");
 	}
-	printf("[pwd]   INODE: %6u  PATH: %s\n",
+	printf("[pwd]   INODE: %6llu  PATH: %s\n",
 	       cwd, pathname ? pathname : "NULL");
         if (pathname) {
 		free(pathname);
@@ -1471,7 +1492,7 @@ void do_print_working_directory(int argc, ss_argv_t argv,
 		com_err(argv[0], retval,
 			"while trying to get pathname of root");
 	}
-	printf("[root]  INODE: %6u  PATH: %s\n",
+	printf("[root]  INODE: %6llu  PATH: %s\n",
 	       root, pathname ? pathname : "NULL");
 	if (pathname) {
 		free(pathname);
@@ -1753,7 +1774,7 @@ void do_find_free_inode(int argc, ss_argv_t argv,
 	if (retval)
 		com_err("ext2fs_new_inode", retval, 0);
 	else
-		printf("Free inode found: %u\n", free_inode);
+		printf("Free inode found: %llu\n", free_inode);
 }
 
 #ifndef READ_ONLY
@@ -2151,7 +2172,7 @@ void do_imap(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused)),
 		block;
 	offset &= (EXT2_BLOCK_SIZE(current_fs->super) - 1);
 
-	printf("Inode %u is part of block group %lu\n"
+	printf("Inode %llu is part of block group %lu\n"
 	       "\tlocated at block %lu, offset 0x%04lx\n", ino, group,
 	       block_nr, offset);
 
@@ -2196,7 +2217,7 @@ void do_idump(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused)),
 	err = ext2fs_read_inode_full(current_fs, ino,
 				     (struct ext2_inode *)buf, isize);
 	if (err) {
-		com_err(argv[0], err, "while reading inode %u", ino);
+		com_err(argv[0], err, "while reading inode %llu", ino);
 		goto err;
 	}
 
@@ -2349,7 +2370,7 @@ void do_punch(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused)),
 
 	if (errcode) {
 		com_err(argv[0], errcode,
-			"while truncating inode %u from %llu to %llu\n", ino,
+			"while truncating inode %llu from %llu to %llu\n", ino,
 			(unsigned long long) start, (unsigned long long) end);
 		return;
 	}
@@ -2386,7 +2407,7 @@ void do_fallocate(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused)),
 
 	if (errcode) {
 		com_err(argv[0], errcode,
-			"while fallocating inode %u from %llu to %llu\n", ino,
+			"while fallocating inode %llu from %llu to %llu\n", ino,
 			(unsigned long long) start, (unsigned long long) end);
 		return;
 	}

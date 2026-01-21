@@ -247,7 +247,24 @@ int parse_quota_types(const char *in_str, unsigned int *qtype_bits,
  * This allows the caller to get or set the quota inode by type without the
  * need for the quota array to be contiguous in the superblock.
  */
-static inline ext2_ino_t *quota_sb_inump(struct ext2_super_block *sb,
+static inline ext2_ino_t quota_sb_inum(struct ext2_super_block *sb,
+					 enum quota_type qtype)
+{
+	switch (qtype) {
+	case USRQUOTA:
+		return make_fid_sb(sb, sb->s_usr_quota_inum);
+	case GRPQUOTA:
+		return make_fid_sb(sb, sb->s_grp_quota_inum);
+	case PRJQUOTA:
+		return make_fid_sb(sb, sb->s_prj_quota_inum);
+	default:
+		return 0;
+	}
+
+	return 0;
+}
+
+static inline __u32 *quota_sb_inump(struct ext2_super_block *sb,
 					 enum quota_type qtype)
 {
 	switch (qtype) {

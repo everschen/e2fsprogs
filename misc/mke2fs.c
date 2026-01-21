@@ -204,7 +204,7 @@ static int is_before_linux_ver(unsigned int major, unsigned int minor,
  */
 static void invalid_block(ext2_filsys fs EXT2FS_ATTR((unused)), blk_t blk)
 {
-	fprintf(stderr, _("Bad block %u out of range; ignored.\n"), blk);
+	fprintf(stderr, _("Bad block %llu out of range; ignored.\n"), blk);
 	return;
 }
 
@@ -309,7 +309,7 @@ static void handle_bad_blocks(ext2_filsys fs, badblocks_list bb_list)
 						       group_block + j)) {
 				if (!group_bad)
 					fprintf(stderr,
-_("Warning: the backup superblock/group descriptors at block %u contain\n"
+_("Warning: the backup superblock/group descriptors at block %llu contain\n"
 "	bad blocks.\n\n"),
 						group_block);
 				group_bad++;
@@ -1569,7 +1569,7 @@ int get_int_from_profile(char **types, const char *opt, int def_val)
 static unsigned int get_uint_from_profile(char **types, const char *opt,
 					unsigned int def_val)
 {
-	unsigned int ret;
+	long long unsigned int ret;
 	char **cpp;
 
 	profile_get_uint(profile, "defaults", opt, 0, def_val, &ret);
@@ -3680,7 +3680,7 @@ int main (int argc, char *argv[])
 			goto no_journal;
 		}
 		if (!quiet) {
-			printf(_("Creating journal (%u blocks): "),
+			printf(_("Creating journal (%llu blocks): "),
 			       jparams.num_journal_blocks + jparams.num_fc_blocks);
 			fflush(stdout);
 		}

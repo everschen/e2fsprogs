@@ -163,7 +163,7 @@ void do_icheck(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused)),
 			       (unsigned long long) binfo->blk);
 			continue;
 		}
-		printf("%llu\t%u\n", (unsigned long long) binfo->blk,
+		printf("%llu\t%llu\n", (unsigned long long) binfo->blk,
 		       binfo->ino);
 	}
 

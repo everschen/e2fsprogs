@@ -20,7 +20,7 @@ static int print_orphan_inode(const char *progname, ext2_ino_t ino,
 
 	if (debugfs_read_inode(ino, &inode, progname))
 		return 1;
-	printf("ino %-6u  links_count %-3u  size %-11llu\n",
+	printf("ino %-6llu  links_count %-3u  size %-11llu\n",
 	       ino, inode.i_links_count,
 	       (unsigned long long) EXT2_I_SIZE(&inode));
 	if (next)

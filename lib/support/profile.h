@@ -76,7 +76,7 @@ long profile_get_integer
 long profile_get_uint
 	(profile_t profile, const char *name, const char *subname,
 		const char *subsubname, unsigned int def_val,
-		unsigned int *ret_int);
+		long long unsigned int *ret_int);
 
 long profile_get_double
 	(profile_t profile, const char *name, const char *subname,

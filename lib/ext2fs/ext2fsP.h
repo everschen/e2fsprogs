@@ -36,17 +36,17 @@ static inline time_t ext2fsP_get_time(ext2_filsys fs)
 /*
  * Badblocks list
  */
-struct ext2_struct_u32_list {
+struct ext2_struct_u64_list {
 	int	magic;
 	int	num;
 	int	size;
-	__u32	*list;
+	__u64	*list;
 	int	badblocks_flags;
 };
 
-struct ext2_struct_u32_iterate {
+struct ext2_struct_u64_iterate {
 	int			magic;
-	ext2_u32_list		bb;
+	ext2_u64_list		bb;
 	int			ptr;
 };
 

@@ -41,7 +41,7 @@ void e2fsck_add_dx_dir(e2fsck_t ctx, ext2_ino_t ino, struct ext2_inode *inode,
 					   &ctx->dx_dir_info);
 		if (retval) {
 			fprintf(stderr, "Couldn't reallocate dx_dir_info "
-				"structure to %u entries\n",
+				"structure to %llu entries\n",
 				ctx->dx_dir_info_size);
 			fatal_error(ctx, 0);
 			ctx->dx_dir_info_size -= 10;

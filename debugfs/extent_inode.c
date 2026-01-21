@@ -78,7 +78,7 @@ void do_extent_open(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused)),
 
 	if (argc == 1) {
 		if (current_ino)
-			printf("Current inode is %u\n", current_ino);
+			printf("Current inode is %llu\n", current_ino);
 		else
 			printf("No current inode\n");
 		return;
@@ -108,7 +108,7 @@ void do_extent_open(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused)),
 	cp = strchr(extent_prompt, ':');
 	if (cp)
 		*cp = 0;
-	sprintf(extent_prompt + strlen(extent_prompt), " (extent ino %u): ",
+	sprintf(extent_prompt + strlen(extent_prompt), " (extent ino %llu): ",
 		current_ino);
 	ss_add_request_table(sci_idx, &extent_cmds, 1, &ret);
 	ss_set_prompt(sci_idx, extent_prompt);

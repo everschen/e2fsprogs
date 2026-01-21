@@ -112,7 +112,7 @@ static void htree_dump_leaf_node(ext2_filsys fs, ext2_ino_t ino,
 				 t->det_checksum);
 		} else {
 			snprintf(tmp, EXT2_NAME_LEN + 64,
-				 "%u 0x%08x-%08x (%d) %s   ",
+				 "%llu 0x%08x-%08x (%d) %s   ",
 				 dirent->inode, hash, minor_hash,
 				 rec_len, name);
 		}

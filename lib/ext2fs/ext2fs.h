@@ -85,8 +85,8 @@ extern "C" {
 #include <ext2fs/ext3_extents.h>
 #endif /* EXT2_FLAT_INCLUDES */
 
-typedef __u32 __bitwise		ext2_ino_t;
-typedef __u32 __bitwise		blk_t;
+typedef __u64 __bitwise		ext2_ino_t;
+typedef __u64 __bitwise		blk_t;
 typedef __u64 __bitwise		blk64_t;
 typedef __u32 __bitwise		dgrp_t;
 typedef __s32 __bitwise		ext2_off_t;
@@ -139,15 +139,15 @@ typedef struct ext2fs_struct_generic_bitmap_base *ext2fs_block_bitmap;
  * Badblocks list definitions
  */
 
-typedef struct ext2_struct_u32_list *ext2_badblocks_list;
-typedef struct ext2_struct_u32_iterate *ext2_badblocks_iterate;
+typedef struct ext2_struct_u64_list *ext2_badblocks_list;
+typedef struct ext2_struct_u64_iterate *ext2_badblocks_iterate;
 
-typedef struct ext2_struct_u32_list *ext2_u32_list;
-typedef struct ext2_struct_u32_iterate *ext2_u32_iterate;
+typedef struct ext2_struct_u64_list *ext2_u64_list;
+typedef struct ext2_struct_u64_iterate *ext2_u64_iterate;
 
 /* old */
-typedef struct ext2_struct_u32_list *badblocks_list;
-typedef struct ext2_struct_u32_iterate *badblocks_iterate;
+typedef struct ext2_struct_u64_list *badblocks_list;
+typedef struct ext2_struct_u64_iterate *badblocks_iterate;
 
 #define BADBLOCKS_FLAG_DIRTY	1
 
@@ -913,16 +913,16 @@ extern errcode_t ext2fs_allocate_group_table(ext2_filsys fs, dgrp_t group,
 					     ext2fs_block_bitmap bmap);
 
 /* badblocks.c */
-extern errcode_t ext2fs_u32_list_create(ext2_u32_list *ret, int size);
-extern errcode_t ext2fs_u32_list_add(ext2_u32_list bb, __u32 blk);
-extern int ext2fs_u32_list_find(ext2_u32_list bb, __u32 blk);
-extern int ext2fs_u32_list_test(ext2_u32_list bb, blk_t blk);
-extern errcode_t ext2fs_u32_list_iterate_begin(ext2_u32_list bb,
-					       ext2_u32_iterate *ret);
-extern int ext2fs_u32_list_iterate(ext2_u32_iterate iter, blk_t *blk);
-extern void ext2fs_u32_list_iterate_end(ext2_u32_iterate iter);
-extern errcode_t ext2fs_u32_copy(ext2_u32_list src, ext2_u32_list *dest);
-extern int ext2fs_u32_list_equal(ext2_u32_list bb1, ext2_u32_list bb2);
+extern errcode_t ext2fs_u32_list_create(ext2_u64_list *ret, int size);
+extern errcode_t ext2fs_u32_list_add(ext2_u64_list bb, __u32 blk);
+extern int ext2fs_u32_list_find(ext2_u64_list bb, __u32 blk);
+extern int ext2fs_u64_list_test(ext2_u64_list bb, blk_t blk);
+extern errcode_t ext2fs_u64_list_iterate_begin(ext2_u64_list bb,
+					       ext2_u64_iterate *ret);
+extern int ext2fs_u64_list_iterate(ext2_u64_iterate iter, blk_t *blk);
+extern void ext2fs_u64_list_iterate_end(ext2_u64_iterate iter);
+extern errcode_t ext2fs_u64_copy(ext2_u64_list src, ext2_u64_list *dest);
+extern int ext2fs_u32_list_equal(ext2_u64_list bb1, ext2_u64_list bb2);
 
 extern errcode_t ext2fs_badblocks_list_create(ext2_badblocks_list *ret,
 					    int size);
@@ -930,8 +930,8 @@ extern errcode_t ext2fs_badblocks_list_add(ext2_badblocks_list bb,
 					   blk_t blk);
 extern int ext2fs_badblocks_list_test(ext2_badblocks_list bb,
 				    blk_t blk);
-extern int ext2fs_u32_list_del(ext2_u32_list bb, __u32 blk);
-extern void ext2fs_badblocks_list_del(ext2_u32_list bb, __u32 blk);
+extern int ext2fs_u32_list_del(ext2_u64_list bb, __u32 blk);
+extern void ext2fs_badblocks_list_del(ext2_u64_list bb, __u32 blk);
 extern errcode_t
 	ext2fs_badblocks_list_iterate_begin(ext2_badblocks_list bb,
 					    ext2_badblocks_iterate *ret);
@@ -942,7 +942,7 @@ extern errcode_t ext2fs_badblocks_copy(ext2_badblocks_list src,
 				       ext2_badblocks_list *dest);
 extern int ext2fs_badblocks_equal(ext2_badblocks_list bb1,
 				  ext2_badblocks_list bb2);
-extern int ext2fs_u32_list_count(ext2_u32_list bb);
+extern int ext2fs_u32_list_count(ext2_u64_list bb);
 
 /* bb_compat */
 extern errcode_t badblocks_list_create(badblocks_list *ret, int size);
@@ -1504,7 +1504,7 @@ extern errcode_t ext2fs_sync_device(int fd, int flushb);
 extern void ext2fs_free(ext2_filsys fs);
 extern void ext2fs_free_dblist(ext2_dblist dblist);
 extern void ext2fs_badblocks_list_free(ext2_badblocks_list bb);
-extern void ext2fs_u32_list_free(ext2_u32_list bb);
+extern void ext2fs_u32_list_free(ext2_u64_list bb);
 
 /* gen_bitmap.c */
 extern void ext2fs_free_generic_bitmap(ext2fs_inode_bitmap bitmap);
@@ -1544,10 +1544,10 @@ extern errcode_t ext2fs_set_generic_bitmap_range(ext2fs_generic_bitmap bmap,
 						 void *in);
 extern errcode_t ext2fs_find_first_zero_generic_bitmap(ext2fs_generic_bitmap bitmap,
 						       __u32 start, __u32 end,
-						       __u32 *out);
+						       __u64 *out);
 extern errcode_t ext2fs_find_first_set_generic_bitmap(ext2fs_generic_bitmap bitmap,
 						       __u32 start, __u32 end,
-						       __u32 *out);
+						       __u64 *out);
 
 /* gen_bitmap64.c */
 void ext2fs_free_generic_bmap(ext2fs_generic_bitmap bmap);
@@ -1750,7 +1750,7 @@ int ext2fs_native_flag(void);
 extern errcode_t ext2fs_new_dir_block(ext2_filsys fs, ext2_ino_t dir_ino,
 				ext2_ino_t parent_ino, char **block);
 extern errcode_t ext2fs_new_dir_inline_data(ext2_filsys fs, ext2_ino_t dir_ino,
-				ext2_ino_t parent_ino, __u32 *iblock);
+				ext2_ino_t parent_ino, __u64 *iblock);
 
 /* nls_utf8.c */
 extern const struct ext2fs_nls_table *ext2fs_load_nls_table(int encoding);

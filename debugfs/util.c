@@ -129,7 +129,7 @@ ext2_ino_t string_to_inode(char *str)
 		return 0;
 	}
 	if (ino > current_fs->super->s_inodes_count) {
-		com_err(str, 0, "resolves to an illegal inode number: %u\n",
+		com_err(str, 0, "resolves to an illegal inode number: %llu\n",
 			ino);
 		return 0;
 	}
@@ -419,7 +419,7 @@ int debugfs_read_inode2(ext2_ino_t ino, struct ext2_inode * inode,
 
 	retval = ext2fs_read_inode2(current_fs, ino, inode, bufsize, flags);
 	if (retval) {
-		com_err(cmd, retval, "while reading inode %u", ino);
+		com_err(cmd, retval, "while reading inode %llu", ino);
 		return 1;
 	}
 	return 0;
@@ -432,7 +432,7 @@ int debugfs_read_inode(ext2_ino_t ino, struct ext2_inode * inode,
 
 	retval = ext2fs_read_inode(current_fs, ino, inode);
 	if (retval) {
-		com_err(cmd, retval, "while reading inode %u", ino);
+		com_err(cmd, retval, "while reading inode %llu", ino);
 		return 1;
 	}
 	return 0;
@@ -447,7 +447,7 @@ int debugfs_write_inode2(ext2_ino_t ino,
 
 	retval = ext2fs_write_inode2(current_fs, ino, inode, bufsize, flags);
 	if (retval) {
-		com_err(cmd, retval, "while writing inode %u", ino);
+		com_err(cmd, retval, "while writing inode %llu", ino);
 		return 1;
 	}
 	return 0;
@@ -460,7 +460,7 @@ int debugfs_write_inode(ext2_ino_t ino, struct ext2_inode * inode,
 
 	retval = ext2fs_write_inode(current_fs, ino, inode);
 	if (retval) {
-		com_err(cmd, retval, "while writing inode %u", ino);
+		com_err(cmd, retval, "while writing inode %llu", ino);
 		return 1;
 	}
 	return 0;
@@ -473,7 +473,7 @@ int debugfs_write_new_inode(ext2_ino_t ino, struct ext2_inode * inode,
 
 	retval = ext2fs_write_new_inode(current_fs, ino, inode);
 	if (retval) {
-		com_err(cmd, retval, "while creating inode %u", ino);
+		com_err(cmd, retval, "while creating inode %llu", ino);
 		return 1;
 	}
 	return 0;

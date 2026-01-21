@@ -135,7 +135,7 @@ static void show_stats(e2fsck_t	ctx)
 	}
 
 	if (!verbose) {
-		log_out(ctx, _("%s: %u/%u files (%0d.%d%% non-contiguous), "
+		log_out(ctx, _("%s: %llu/%llu files (%0d.%d%% non-contiguous), "
 			       "%llu/%llu blocks\n"),
 			ctx->device_name, inodes_used, inodes,
 			frag_percent_total / 10, frag_percent_total % 10,
@@ -162,8 +162,8 @@ static void show_stats(e2fsck_t	ctx)
 		log_out(ctx, "\n");
 	}
 
-	log_out(ctx, P_("\n%12u inode used (%2.2f%%, out of %u)\n",
-			"\n%12u inodes used (%2.2f%%, out of %u)\n",
+	log_out(ctx, P_("\n%12llu inode used (%2.2f%%, out of %llu)\n",
+			"\n%12llu inodes used (%2.2f%%, out of %llu)\n",
 			inodes_used), inodes_used,
 		100.0 * inodes_used / inodes, inodes);
 	log_out(ctx, P_("%12u non-contiguous file (%0d.%d%%)\n",
@@ -1947,7 +1947,7 @@ print_unsupp_features:
 				jparams.num_journal_blocks = journal_size;
 				jparams.num_fc_blocks = 0;
 			}
-			log_out(ctx, _("Creating journal (%d blocks): "),
+			log_out(ctx, _("Creating journal (%lld blocks): "),
 			       jparams.num_journal_blocks);
 			fflush(stdout);
 			retval = ext2fs_add_journal_inode3(fs, &jparams, ~0ULL, 0);
@@ -2040,7 +2040,7 @@ check_quotas:
 		int needs_writeout;
 
 		for (qtype = 0; qtype < MAXQUOTAS; qtype++) {
-			if (*quota_sb_inump(sb, qtype) == 0)
+			if (quota_sb_inum(sb, qtype) == 0)
 				continue;
 			needs_writeout = 0;
 			pctx.num = qtype;

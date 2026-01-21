@@ -205,7 +205,7 @@ errcode_t quota_file_open(quota_ctx_t qctx, struct quota_handle *h,
 		return err;
 
 	if (qf_ino == 0)
-		qf_ino = *quota_sb_inump(fs->super, qtype);
+		qf_ino = quota_sb_inum(fs->super, qtype);
 
 	log_debug("Opening quota ino=%u, type=%d", qf_ino, qtype);
 	err = ext2fs_file_open(fs, qf_ino, flags, &e2_file);

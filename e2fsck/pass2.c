@@ -1143,7 +1143,7 @@ static int check_dir_block(ext2_filsys fs,
 		dot_state = 0;
 
 	if (ctx->dirs_to_hash &&
-	    ext2fs_u32_list_test(ctx->dirs_to_hash, ino))
+	    ext2fs_u64_list_test(ctx->dirs_to_hash, ino))
 		dups_found++;
 
 #if 0
@@ -1311,7 +1311,7 @@ skip_checksum:
 		dict_init(&de_dict, DICTCOUNT_T_MAX, dict_de_cmp);
 	}
 	if (ctx->casefolded_dirs)
-		casefolded = ext2fs_u32_list_test(ctx->casefolded_dirs, ino);
+		casefolded = ext2fs_u64_list_test(ctx->casefolded_dirs, ino);
 	hash_in_dirent = (casefolded &&
 			  (dir_encpolicy_id != NO_ENCRYPTION_POLICY));
 

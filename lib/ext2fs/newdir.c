@@ -39,7 +39,7 @@ errcode_t ext2fs_new_dir_block(ext2_filsys fs, ext2_ino_t dir_ino,
 
 	EXT2_CHECK_MAGIC(fs, EXT2_ET_MAGIC_EXT2FS_FILSYS);
 
-	ECFS_DEBUG("dir_ino:%d parent_ino=%d", dir_ino, parent_ino);
+	ECFS_DEBUG("dir_ino:%lld parent_ino=%lld", dir_ino, parent_ino);
 
 	retval = ext2fs_get_mem(fs->blocksize, &buf);
 	if (retval)
@@ -85,7 +85,7 @@ errcode_t ext2fs_new_dir_block(ext2_filsys fs, ext2_ino_t dir_ino,
 		ext2fs_dirent_set_file_type(dir, filetype);
 		dir->name[0] = '.';
 		dir->name[1] = '.';
-		ECFS_DEBUG("dir->inode:%d filetype=%d", dir->inode, filetype);
+		ECFS_DEBUG("dir->inode:%lld filetype=%d", dir->inode, filetype);
 
 	}
 
@@ -102,7 +102,7 @@ errcode_t ext2fs_new_dir_block(ext2_filsys fs, ext2_ino_t dir_ino,
  */
 errcode_t ext2fs_new_dir_inline_data(ext2_filsys fs,
 				     ext2_ino_t dir_ino EXT2FS_ATTR((unused)),
-				     ext2_ino_t parent_ino, __u32 *iblock)
+				     ext2_ino_t parent_ino, __u64 *iblock)
 {
 	struct ext2_dir_entry 	*dir = NULL;
 	errcode_t		retval;

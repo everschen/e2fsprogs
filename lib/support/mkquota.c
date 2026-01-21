@@ -93,7 +93,7 @@ int quota_file_exists(ext2_filsys fs, enum quota_type qtype)
  */
 void quota_set_sb_inum(ext2_filsys fs, ext2_ino_t ino, enum quota_type qtype)
 {
-	ext2_ino_t *inump;
+	__u32 *inump;
 
 	inump = quota_sb_inump(fs->super, qtype);
 
@@ -101,7 +101,7 @@ void quota_set_sb_inum(ext2_filsys fs, ext2_ino_t ino, enum quota_type qtype)
 		 qtype);
 	if (inump == NULL)
 		return;
-	*inump = ino;
+	*inump = fid_get_ino(ino);
 	ext2fs_mark_super_dirty(fs);
 }
 
@@ -116,7 +116,7 @@ errcode_t quota_remove_inode(ext2_filsys fs, enum quota_type qtype)
 		return retval;
 	}
 
-	qf_ino = *quota_sb_inump(fs->super, qtype);
+	qf_ino = quota_sb_inum(fs->super, qtype);
 	if (qf_ino == 0)
 		return 0;
 	retval = quota_inode_truncate(fs, qf_ino);
@@ -312,7 +312,7 @@ errcode_t quota_init_context(quota_ctx_t *qctx, ext2_filsys fs,
 			if (((1 << qtype) & qtype_bits) == 0)
 				continue;
 		} else {
-			if (*quota_sb_inump(fs->super, qtype) == 0)
+			if (quota_sb_inum(fs->super, qtype) == 0)
 				continue;
 		}
 		err = ext2fs_get_mem(sizeof(dict_t), &dict);

@@ -634,7 +634,7 @@ static inline int tl_to_darg(struct dentry_info_args *darg,
 	       val + sizeof(struct ext4_fc_dentry_info),
 	       darg->dname_len);
 	darg->dname[darg->dname_len] = 0;
-	jbd_debug(1, "%s: %s, ino %u, parent %u\n",
+	jbd_debug(1, "%s: %s, ino %llu, parent %llu\n",
 		  le16_to_cpu(tl->fc_tag) == EXT4_FC_TAG_CREAT ? "create" :
 		  (le16_to_cpu(tl->fc_tag) == EXT4_FC_TAG_LINK ? "link" :
 		   (le16_to_cpu(tl->fc_tag) == EXT4_FC_TAG_UNLINK ? "unlink" :

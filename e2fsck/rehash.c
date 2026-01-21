@@ -69,7 +69,7 @@ int e2fsck_dir_will_be_rehashed(e2fsck_t ctx, ext2_ino_t ino)
 		return 1;
 	if (!ctx->dirs_to_hash)
 		return 0;
-	return ext2fs_u32_list_test(ctx->dirs_to_hash, ino);
+	return ext2fs_u64_list_test(ctx->dirs_to_hash, ino);
 }
 
 #undef REHASH_DEBUG
@@ -1130,7 +1130,7 @@ void e2fsck_rehash_directories(e2fsck_t ctx)
 	struct resource_track	rtrack;
 #endif
 	struct dir_info		*dir;
-	ext2_u32_iterate 	iter;
+	ext2_u64_iterate 	iter;
 	struct dir_info_iter *	dirinfo_iter = 0;
 	ext2_ino_t		ino;
 	errcode_t		retval;
@@ -1151,7 +1151,7 @@ void e2fsck_rehash_directories(e2fsck_t ctx)
 		dirinfo_iter = e2fsck_dir_info_iter_begin(ctx);
 		max = e2fsck_get_num_dirinfo(ctx);
 	} else {
-		retval = ext2fs_u32_list_iterate_begin(ctx->dirs_to_hash,
+		retval = ext2fs_u64_list_iterate_begin(ctx->dirs_to_hash,
 						       &iter);
 		if (retval) {
 			pctx.errcode = retval;
@@ -1167,7 +1167,7 @@ void e2fsck_rehash_directories(e2fsck_t ctx)
 				break;
 			ino = dir->ino;
 		} else {
-			if (!ext2fs_u32_list_iterate(iter, &ino))
+			if (!ext2fs_u64_list_iterate(iter, &ino))
 				break;
 		}
 		if (!ext2fs_test_inode_bitmap2(ctx->inode_dir_map, ino))
@@ -1194,7 +1194,7 @@ void e2fsck_rehash_directories(e2fsck_t ctx)
 	if (all_dirs)
 		e2fsck_dir_info_iter_end(ctx, dirinfo_iter);
 	else
-		ext2fs_u32_list_iterate_end(iter);
+		ext2fs_u64_list_iterate_end(iter);
 
 	if (ctx->dirs_to_hash)
 		ext2fs_u32_list_free(ctx->dirs_to_hash);

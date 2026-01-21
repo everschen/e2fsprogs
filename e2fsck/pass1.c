@@ -862,7 +862,7 @@ extern errcode_t e2fsck_setup_icount(e2fsck_t ctx, const char *icount_name,
 				     int flags, ext2_icount_t hint,
 				     ext2_icount_t *ret)
 {
-	unsigned int		threshold;
+	long long unsigned int		threshold;
 	unsigned int		save_type;
 	ext2_ino_t		num_dirs;
 	errcode_t		retval;
@@ -1182,7 +1182,7 @@ static int quota_inum_is_super(struct ext2_super_block *sb, ext2_ino_t ino)
 	enum quota_type qtype;
 
 	for (qtype = 0; qtype < MAXQUOTAS; qtype++)
-		if (*quota_sb_inump(sb, qtype) == ino)
+		if (quota_sb_inum(sb, qtype) == ino)
 			return 1;
 
 	return 0;
@@ -2262,7 +2262,7 @@ static void process_inodes(e2fsck_t ctx, char *block_buf)
 #if 0
 		printf("%u ", pctx.ino);
 #endif
-		sprintf(buf, _("reading indirect blocks of inode %u"),
+		sprintf(buf, _("reading indirect blocks of inode %llu"),
 			pctx.ino);
 		ehandler_operation(buf);
 		check_blocks(ctx, &pctx, block_buf,

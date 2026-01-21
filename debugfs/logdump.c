@@ -193,7 +193,7 @@ void do_logdump(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused)),
 			(group_offset / inodes_per_block);
 		inode_offset_to_dump = ((group_offset % inodes_per_block)
 					* sizeof(struct ext2_inode));
-		printf("Inode %u is at group %u, block %llu, offset %u\n",
+		printf("Inode %llu is at group %u, block %llu, offset %u\n",
 		       inode_to_dump, inode_group,
 		       (unsigned long long) inode_block_to_dump,
 		       inode_offset_to_dump);
@@ -872,7 +872,7 @@ static void dump_metadata_block(FILE *out_file, struct journal_source *source,
 		struct ext2_inode *inode;
 		int first, prev, this, start_extent, i;
 
-		fprintf(out_file, "    (inode block for inode %u):\n",
+		fprintf(out_file, "    (inode block for inode %llu):\n",
 			inode_to_dump);
 
 		inode = (struct ext2_inode *) (buf + inode_offset_to_dump);

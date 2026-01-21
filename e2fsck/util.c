@@ -823,7 +823,7 @@ errcode_t e2fsck_mmp_update(ext2_filsys fs)
 void e2fsck_set_bitmap_type(ext2_filsys fs, unsigned int default_type,
 			    const char *profile_name, unsigned int *old_type)
 {
-	unsigned type;
+	long long unsigned int type;
 	e2fsck_t ctx = (e2fsck_t) fs->priv_data;
 
 	if (old_type)

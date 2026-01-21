@@ -270,20 +270,20 @@ static int v2_init_io(struct quota_handle *h)
 	if ((filesize > (1U << 31)) ||
 	    (info->dqi_qtree.dqi_blocks >
 	     (filesize + QT_BLKSIZE - 1) >> QT_BLKSIZE_BITS)) {
-		log_err("Quota inode %u corrupted: file size %llu; "
+		log_err("Quota inode %llu corrupted: file size %llu; "
 			"dqi_blocks %u", h->qh_qf.ino,
 			(unsigned long long) filesize,
 			info->dqi_qtree.dqi_blocks);
 		return -1;
 	}
 	if (info->dqi_qtree.dqi_free_blk >= info->dqi_qtree.dqi_blocks) {
-		log_err("Quota inode %u corrupted: free_blk %u; dqi_blocks %u",
+		log_err("Quota inode %llu corrupted: free_blk %u; dqi_blocks %u",
 			h->qh_qf.ino, info->dqi_qtree.dqi_free_blk,
 			info->dqi_qtree.dqi_blocks);
 		return -1;
 	}
 	if (info->dqi_qtree.dqi_free_entry >= info->dqi_qtree.dqi_blocks) {
-		log_err("Quota inode %u corrupted: free_entry %u; "
+		log_err("Quota inode %llu corrupted: free_entry %u; "
 			"dqi_blocks %u", h->qh_qf.ino,
 			info->dqi_qtree.dqi_free_entry,
 			info->dqi_qtree.dqi_blocks);

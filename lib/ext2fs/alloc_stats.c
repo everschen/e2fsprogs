@@ -116,7 +116,7 @@ void ext2fs_block_alloc_stats_range(ext2_filsys fs, blk64_t blk,
 #ifndef OMIT_COM_ERR
 	if (blk + num > ext2fs_blocks_count(fs->super)) {
 		com_err("ext2fs_block_alloc_stats_range", 0,
-			"Illegal block range: %llu (%u) ",
+			"Illegal block range: %llu (%llu) ",
 			(unsigned long long) blk, num);
 		return;
 	}

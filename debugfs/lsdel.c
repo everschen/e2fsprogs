@@ -196,7 +196,7 @@ void do_lsdel(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused)),
 	      deleted_info_compare);
 
 	for (i = 0; i < num_delarray; i++) {
-		fprintf(out, "%6u %6d %6o %6llu %6lld/%6lld %s",
+		fprintf(out, "%6llu %6d %6o %6llu %6lld/%6lld %s",
 			delarray[i].ino,
 			delarray[i].uid, delarray[i].mode,
 			(unsigned long long) delarray[i].size,

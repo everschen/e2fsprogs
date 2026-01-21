@@ -456,10 +456,10 @@ void list_super2(struct ext2_super_block * sb, FILE *f)
 			sb->s_mmp_update_interval);
 	}
 	for (qtype = 0; qtype < MAXQUOTAS; qtype++) {
-		if (*quota_sb_inump(sb, qtype) != 0)
-			fprintf(f, "%-26s%u\n",
+		if (quota_sb_inum(sb, qtype) != 0)
+			fprintf(f, "%-26s%llu\n",
 				quota_type2prefix(qtype),
-				*quota_sb_inump(sb, qtype));
+				quota_sb_inum(sb, qtype));
 	}
 
 	if (ext2fs_has_feature_metadata_csum(sb)) {

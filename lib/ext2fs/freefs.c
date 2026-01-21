@@ -72,7 +72,7 @@ void ext2fs_free(ext2_filsys fs)
 /*
  * This procedure frees a badblocks list.
  */
-void ext2fs_u32_list_free(ext2_u32_list bb)
+void ext2fs_u32_list_free(ext2_u64_list bb)
 {
 	if (bb->magic != EXT2_ET_MAGIC_BADBLOCKS_LIST)
 		return;
@@ -85,7 +85,7 @@ void ext2fs_u32_list_free(ext2_u32_list bb)
 
 void ext2fs_badblocks_list_free(ext2_badblocks_list bb)
 {
-	ext2fs_u32_list_free((ext2_u32_list) bb);
+	ext2fs_u32_list_free((ext2_u64_list) bb);
 }
 
 

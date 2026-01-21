@@ -363,7 +363,7 @@ struct e2fsck_struct {
 	/*
 	 * Directories to hash
 	 */
-	ext2_u32_list	dirs_to_hash;
+	ext2_u64_list	dirs_to_hash;
 
 	/*
 	 * Encrypted file information
@@ -375,7 +375,7 @@ struct e2fsck_struct {
 	 */
 	int process_inode_size;
 	int inode_buffer_blocks;
-	unsigned int htree_slack_percentage;
+	long long unsigned int htree_slack_percentage;
 
 	/*
 	 * ext3 journal support
@@ -433,7 +433,7 @@ struct e2fsck_struct {
 	int ext_attr_ver;
 	profile_t	profile;
 	int blocks_per_page;
-	ext2_u32_list casefolded_dirs;
+	ext2_u64_list casefolded_dirs;
 
 	/* Reserve blocks for root and l+f re-creation */
 	blk64_t root_repair_block, lnf_repair_block;

@@ -59,17 +59,17 @@ static int ncheck_proc(struct ext2_dir_entry *dirent,
 							     0, &iw->parent);
 				if (retval) {
 					com_err("ncheck", retval,
-		"while calling ext2fs_get_pathname for inode #%u", iw->dir);
+		"while calling ext2fs_get_pathname for inode #%llu", iw->dir);
 					iw->get_pathname_failed = 1;
 				}
 			}
 			if (iw->parent)
-				printf("%u\t%s/%.*s", iw->iarray[i],
+				printf("%llu\t%s/%.*s", iw->iarray[i],
 				       iw->parent,
 				       ext2fs_dirent_name_len(dirent),
 				       dirent->name);
 			else
-				printf("%u\t<%u>/%.*s", iw->iarray[i],
+				printf("%llu\t<%llu>/%.*s", iw->iarray[i],
 				       iw->dir,
 				       ext2fs_dirent_name_len(dirent),
 				       dirent->name);

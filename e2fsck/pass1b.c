@@ -993,7 +993,7 @@ static errcode_t clone_file(e2fsck_t ctx, ext2_ino_t ino,
 			if (!n) {
 				com_err("clone_file", 0,
 					_("internal error: couldn't lookup EA "
-					  "inode record for %u"),
+					  "inode record for %llu"),
 					ino_el->inode);
 				retval = 0; /* OK to stumble on... */
 				goto errout;

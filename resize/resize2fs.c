@@ -1945,7 +1945,7 @@ static int process_block(ext2_filsys fs, blk64_t	*block_nr,
 			pb->changed = 1;
 #ifdef RESIZE2FS_DEBUG
 			if (pb->rfs->flags & RESIZE_DEBUG_BMOVE)
-				printf("ino=%u, blockcnt=%lld, %llu->%llu\n",
+				printf("ino=%llu, blockcnt=%lld, %llu->%llu\n",
 				       pb->old_ino, (long long) blockcnt,
 				       (unsigned long long) block,
 				       (unsigned long long) new_block);
@@ -2280,7 +2280,7 @@ static errcode_t inode_scan_and_fix(ext2_resize_t rfs)
 
 #ifdef RESIZE2FS_DEBUG
 		if (rfs->flags & RESIZE_DEBUG_INODEMAP)
-			printf("Inode moved %u->%u\n", ino, new_inode);
+			printf("Inode moved %llu->%llu\n", ino, new_inode);
 #endif
 		if (!rfs->imap) {
 			retval = ext2fs_create_extent_table(&rfs->imap, 0);
@@ -2413,7 +2413,7 @@ static int check_and_change_inodes(ext2_ino_t dir,
 		return ret;
 #ifdef RESIZE2FS_DEBUG
 	if (is->rfs->flags & RESIZE_DEBUG_INODEMAP)
-		printf("Inode translate (dir=%u, name=%.*s, %u->%u)\n",
+		printf("Inode translate (dir=%llu, name=%.*s, %llu->%llu)\n",
 		       dir, ext2fs_dirent_name_len(dirent), dirent->name,
 		       dirent->inode, new_inode);
 #endif
@@ -3072,7 +3072,7 @@ blk64_t calculate_minimum_resize_size(ext2_filsys fs, int flags)
 				   EXT2_BLOCKS_PER_GROUP(fs->super));
 #ifdef RESIZE2FS_DEBUG
 	if (flags & RESIZE_DEBUG_MIN_CALC)
-		printf("fs has %d inodes, %d groups required.\n",
+		printf("fs has %lld inodes, %d groups required.\n",
 		       inode_count, groups);
 #endif
 

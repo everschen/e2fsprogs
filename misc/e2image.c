@@ -1383,7 +1383,7 @@ static void write_raw_image_file(ext2_filsys fs, int fd, int type, int flags,
 					process_dir_block, &pb);
 			if (retval) {
 				com_err(program_name, retval,
-					_("while iterating over inode %u"),
+					_("while iterating over inode %llu"),
 					ino);
 				exit(1);
 			}
@@ -1397,7 +1397,7 @@ static void write_raw_image_file(ext2_filsys fs, int fd, int type, int flags,
 				       process_file_block, &pb);
 				if (retval) {
 					com_err(program_name, retval,
-					_("while iterating over inode %u"), ino);
+					_("while iterating over inode %llu"), ino);
 					exit(1);
 				}
 			}

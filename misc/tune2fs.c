@@ -1801,12 +1801,12 @@ static int handle_quota_options(ext2_filsys fs)
 
 	for (qtype = 0; qtype < MAXQUOTAS; qtype++) {
 		if (quota_enable[qtype] == QOPT_ENABLE &&
-		    *quota_sb_inump(fs->super, qtype) == 0) {
+		    quota_sb_inum(fs->super, qtype) == 0) {
 			/* Some work needed to match the configuration. */
 			break;
 		}
 		if (quota_enable[qtype] == QOPT_DISABLE &&
-		    *quota_sb_inump(fs->super, qtype)) {
+		    quota_sb_inum(fs->super, qtype)) {
 			/* Some work needed to match the configuration. */
 			break;
 		}
@@ -1832,7 +1832,7 @@ static int handle_quota_options(ext2_filsys fs)
 
 	for (qtype = 0 ; qtype < MAXQUOTAS; qtype++) {
 		if (quota_enable[qtype] == QOPT_ENABLE &&
-		    *quota_sb_inump(fs->super, qtype) == 0) {
+		    quota_sb_inum(fs->super, qtype) == 0) {
 			if ((qf_ino = quota_file_exists(fs, qtype)) > 0) {
 				retval = quota_read_all_dquots(qctx, qf_ino,
 							       qtype,
@@ -1882,7 +1882,7 @@ static int handle_quota_options(ext2_filsys fs)
 	/* Clear Quota feature if all quota types disabled. */
 	if (!qtype_bits) {
 		for (qtype = 0 ; qtype < MAXQUOTAS; qtype++)
-			if (*quota_sb_inump(fs->super, qtype))
+			if (quota_sb_inum(fs->super, qtype))
 				break;
 		if (qtype == MAXQUOTAS) {
 			ext2fs_clear_feature_quota(fs->super);

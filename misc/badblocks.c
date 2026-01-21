@@ -227,7 +227,7 @@ static void print_status(void)
 	gettimeofday(&time_end, 0);
 	len = snprintf(line_buf, sizeof(line_buf), 
 		       _("%6.2f%% done, %s elapsed. "
-		         "(%d/%d/%d errors)"),
+		         "(%lld/%lld/%lld errors)"),
 		       calc_percent((unsigned long) currently_testing,
 				    (unsigned long) num_blocks), 
 		       time_diff_format(&time_end, &time_start, diff_buf),
@@ -1366,7 +1366,7 @@ int main (int argc, char ** argv)
 
 		if (v_flag)
 			fprintf(stderr,
-				_("Pass completed, %u bad blocks found. (%d/%d/%d errors)\n"),
+				_("Pass completed, %u bad blocks found. (%lld/%lld/%lld errors)\n"),
 				bb_count, num_read_errors, num_write_errors, num_corruption_errors);
 
 	} while (passes_clean < num_passes);

@@ -99,12 +99,12 @@ static errcode_t ext2fs_get_pathname_int(ext2_filsys fs, ext2_ino_t dir,
 
 	retval = ext2fs_dir_iterate(fs, dir, 0, buf, get_pathname_proc, &gp);
 	if (retval == EXT2_ET_NO_DIRECTORY) {
-		char tmp[32];
+		char tmp[64];
 
 		if (ino)
-			snprintf(tmp, sizeof(tmp), "<%u>/<%u>", dir, ino);
+			snprintf(tmp, sizeof(tmp), "<%llu>/<%llu>", dir, ino);
 		else
-			snprintf(tmp, sizeof(tmp), "<%u>", dir);
+			snprintf(tmp, sizeof(tmp), "<%llu>", dir);
 		retval = ext2fs_get_mem(strlen(tmp)+1, name);
 		if (retval)
 			goto cleanup;

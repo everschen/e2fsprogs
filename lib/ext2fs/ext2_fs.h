@@ -77,10 +77,7 @@
 /* First non-reserved inode for old ext2 filesystems */
 #define EXT2_GOOD_OLD_FIRST_INO	11
 
-/*
- * The second extended file system magic number
- */
-#define EXT2_SUPER_MAGIC	0xECF3
+
 
 #ifdef __KERNEL__
 #define EXT2_SB(sb)	(&((sb)->u.ext2_sb))
@@ -421,7 +418,7 @@ struct ext2_inode {
 			__u32  h_i_translator;
 		} hurd1;
 	} osd1;				/* OS dependent 1 */
-/*28*/	__u32	i_block[EXT2_N_BLOCKS];/* Pointers to blocks */
+/*28*/	__u64	i_block[EXT2_N_BLOCKS];/* Pointers to blocks */
 /*64*/	__u32	i_generation;	/* File version (for NFS) */
 	__u32	i_file_acl;	/* File ACL */
 	__u32	i_size_high;
@@ -1224,5 +1221,50 @@ struct mmp_struct {
 #define EXT4_ENC_UTF8_12_1	1
 
 #define EXT4_ENC_STRICT_MODE_FL			(1 << 0) /* Reject invalid sequences */
+
+/*
+ * The second extended file system magic number
+ */
+#define EXT2_SUPER_MAGIC	0xECF3
+
+/* Layout:
+ * 63..48: node_id (16 bits)
+ * 47..32: disk_id (16 bits)
+ * 31.. 0: ino     (32 bits)
+ */
+
+#define FID_NODE_SHIFT 48
+#define FID_DISK_SHIFT 32
+
+
+static inline uint64_t make_fid(uint16_t node_id, uint16_t disk_id, uint32_t ino) {
+    uint64_t fid = 0;
+    fid |= ((uint64_t)node_id << FID_NODE_SHIFT);
+    fid |= ((uint64_t)disk_id  << FID_DISK_SHIFT);
+    fid |= (uint64_t)ino;
+    return fid;
+}
+
+static inline uint16_t fid_get_node_id(uint64_t fid) {
+    return (uint16_t)((fid >> FID_NODE_SHIFT) & 0xFFFFu);
+}
+
+static inline uint16_t fid_get_disk_id(uint64_t fid) {
+    return (uint16_t)((fid >> FID_DISK_SHIFT) & 0xFFFFu);
+}
+
+static inline uint32_t fid_get_ino(uint64_t fid) {
+    return (uint32_t)(fid & 0xFFFFFFFFu);
+}
+
+static inline uint32_t fid_get_node_and_disk_id(uint64_t fid)
+{
+    return (uint32_t)(fid >> FID_DISK_SHIFT);
+}
+
+static inline uint64_t make_fid_sb(struct ext2_super_block *sb, uint32_t ino) {
+    return make_fid(sb->s_node_id, sb->s_disk_id, ino);
+}
+
 
 #endif	/* _LINUX_EXT2_FS_H */

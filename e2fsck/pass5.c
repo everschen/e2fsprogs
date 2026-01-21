@@ -224,7 +224,7 @@ static void e2fsck_discard_inodes(e2fsck_t ctx, dgrp_t group,
 	 * Sanity check for 'start'
 	 */
 	if ((start < 1) || (start > EXT2_INODES_PER_GROUP(fs->super))) {
-		printf("PROGRAMMING ERROR: Got start %d outside of group %d!"
+		printf("PROGRAMMING ERROR: Got start %lld outside of group %d!"
 		       " Disabling discard\n",
 			start, group);
 		ctx->options &= ~E2F_OPT_DISCARD;

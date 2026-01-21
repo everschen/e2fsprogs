@@ -2485,11 +2485,11 @@ static void print_problem(FILE *f, problem_t code, int answer, int fixed,
 	if (fixed)
 		fputs(" fixed=\"1\"", f);
 	if (pctx->ino)
-		fprintf(f, " ino=\"%u\"", pctx->ino);
+		fprintf(f, " ino=\"%llu\"", pctx->ino);
 	if (pctx->ino2)
-		fprintf(f, " ino2=\"%u\"", pctx->ino2);
+		fprintf(f, " ino2=\"%llu\"", pctx->ino2);
 	if (pctx->dir)
-		fprintf(f, " dir=\"%u\"", pctx->dir);
+		fprintf(f, " dir=\"%llu\"", pctx->dir);
 	if (pctx->blk)
 		fprintf(f, " blk=\"%llu\"", (unsigned long long) pctx->blk);
 	if (pctx->blk2)

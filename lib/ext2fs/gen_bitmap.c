@@ -537,7 +537,7 @@ static int ext2fs_test_clear_generic_bitmap_range(ext2fs_generic_bitmap gen_bitm
 
 errcode_t ext2fs_find_first_zero_generic_bitmap(ext2fs_generic_bitmap gen_bitmap,
 						__u32 start, __u32 end,
-						__u32 *out)
+						__u64 *out)
 {
 	ext2fs_generic_bitmap_32 bitmap = (ext2fs_generic_bitmap_32) gen_bitmap;
 	blk_t b;
@@ -561,7 +561,7 @@ errcode_t ext2fs_find_first_zero_generic_bitmap(ext2fs_generic_bitmap gen_bitmap
 
 errcode_t ext2fs_find_first_set_generic_bitmap(ext2fs_generic_bitmap gen_bitmap,
 					       __u32 start, __u32 end,
-					       __u32 *out)
+					       __u64 *out)
 {
 	ext2fs_generic_bitmap_32 bitmap = (ext2fs_generic_bitmap_32) gen_bitmap;
 	blk_t b;

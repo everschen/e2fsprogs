@@ -362,7 +362,7 @@ static _INLINE_ void expand_dirent_expression(FILE *f, ext2_filsys fs, char ch,
 
 	switch (ch) {
 	case 'i':
-		fprintf(f, "%u", dirent->inode);
+		fprintf(f, "%llu", dirent->inode);
 		break;
 	case 'n':
 		len = ext2fs_dirent_name_len(dirent);
@@ -426,16 +426,16 @@ static _INLINE_ void expand_percent_expression(FILE *f, ext2_filsys fs,
 		fprintf(f, "%*llu", width, (unsigned long long) ctx->blk2);
 		break;
 	case 'd':
-		fprintf(f, "%*u", width, ctx->dir);
+		fprintf(f, "%*llu", width, ctx->dir);
 		break;
 	case 'g':
 		fprintf(f, "%*u", width, ctx->group);
 		break;
 	case 'i':
-		fprintf(f, "%*u", width, ctx->ino);
+		fprintf(f, "%*llu", width, ctx->ino);
 		break;
 	case 'j':
-		fprintf(f, "%*u", width, ctx->ino2);
+		fprintf(f, "%*llu", width, ctx->ino2);
 		break;
 	case 'm':
 		fprintf(f, "%*s", width, error_message(ctx->errcode));

@@ -20,7 +20,7 @@ static int check_bb_inode_blocks(ext2_filsys fs, blk_t *block_nr, int blockcnt,
 
 static void invalid_block(ext2_filsys fs EXT2FS_ATTR((unused)), blk_t blk)
 {
-	printf(_("Bad block %u out of range; ignored.\n"), blk);
+	printf(_("Bad block %llu out of range; ignored.\n"), blk);
 	return;
 }
 
@@ -131,7 +131,7 @@ static int check_bb_inode_blocks(ext2_filsys fs,
 	 */
 	if (*block_nr >= ext2fs_blocks_count(fs->super) ||
 	    *block_nr < fs->super->s_first_data_block) {
-		printf(_("Warning: illegal block %u found in bad block inode.  "
+		printf(_("Warning: illegal block %llu found in bad block inode.  "
 			 "Cleared.\n"), *block_nr);
 		*block_nr = 0;
 		return BLOCK_CHANGED;

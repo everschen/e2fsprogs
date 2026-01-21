@@ -1570,12 +1570,12 @@ profile_get_integer(profile_t profile, const char *name, const char *subname,
 errcode_t
 profile_get_uint(profile_t profile, const char *name, const char *subname,
 		 const char *subsubname, unsigned int def_val,
-		 unsigned int *ret_int)
+		 long long unsigned int *ret_int)
 {
 	const char	*value;
 	errcode_t	retval;
 	char            *end_value;
-	unsigned long	ret_long;
+	long long unsigned int	ret_long;
 
 	*ret_int = def_val;
 	if (profile == 0)

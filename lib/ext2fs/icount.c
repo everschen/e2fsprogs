@@ -517,7 +517,7 @@ errcode_t ext2fs_icount_validate(ext2_icount_t icount, FILE *out)
 	}
 	for (i=1; i < icount->count; i++) {
 		if (icount->list[i-1].ino >= icount->list[i].ino) {
-			fprintf(out, "%s: list[%d].ino=%u, list[%d].ino=%u\n",
+			fprintf(out, "%s: list[%d].ino=%llu, list[%d].ino=%llu\n",
 				bad, i-1, icount->list[i-1].ino,
 				i, icount->list[i].ino);
 			ret = EXT2_ET_INVALID_ARGUMENT;

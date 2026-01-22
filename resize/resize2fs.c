@@ -3017,7 +3017,7 @@ static errcode_t fix_sb_journal_backup(ext2_filsys fs)
 	retval = ext2fs_read_inode(fs, fs->super->s_journal_inum, &inode);
 	if (retval)
 		return retval;
-	memcpy(fs->super->s_jnl_blocks, inode.i_block, EXT2_N_BLOCKS*4);
+	memcpy(fs->super->s_jnl_blocks, inode.i_block, EXT2_N_BLOCKS*(sizeof(__le64)));
 	fs->super->s_jnl_blocks[15] = inode.i_size_high;
 	fs->super->s_jnl_blocks[16] = inode.i_size;
 	fs->super->s_jnl_backup_type = EXT3_JNL_BACKUP_BLOCKS;

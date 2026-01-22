@@ -46,7 +46,7 @@ int ext2fs_inode_has_valid_blocks2(ext2_filsys fs, struct ext2_inode *inode)
 			return !ext2fs_is_fast_symlink(inode);
 		} else {
 			/* With an EA block, life gets more tricky */
-			if (inode->i_size >= EXT2_N_BLOCKS*4)
+			if (inode->i_size >= EXT2_N_BLOCKS*(sizeof(__le64)))
 				return 1; /* definitely using i_block[] */
 			if (inode->i_size > 4 && inode->i_block[1] == 0)
 				return 1; /* definitely using i_block[] */

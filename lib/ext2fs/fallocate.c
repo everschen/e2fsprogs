@@ -19,7 +19,8 @@
 #include "ext2fs.h"
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-#undef DEBUG
+//#undef DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 # define dbg_printf(f, a...)  do {printf(f, ## a); fflush(stdout); } while (0)
@@ -683,6 +684,7 @@ static errcode_t extent_fallocate(ext2_filsys fs, int flags, ext2_ino_t ino,
 
 	end = start + len - 1;
 	err = ext2fs_extent_open2(fs, ino, inode, &handle);
+	ECFS_DEBUG("goal=%lld flags=%d ino=%lld err=%d", goal, flags, ino, err);
 	if (err)
 		return err;
 
@@ -695,6 +697,7 @@ static errcode_t extent_fallocate(ext2_filsys fs, int flags, ext2_ino_t ino,
 	 * _get() will error out.
 	 */
 start_again:
+	ECFS_DEBUG("goal=%lld flags=%d ino=%lld", goal, flags, ino);
 	ext2fs_extent_goto(handle, start);
 	err = ext2fs_extent_get(handle, EXT2_EXTENT_CURRENT, &left_extent);
 	if (err == EXT2_ET_NO_CURRENT_NODE) {
@@ -711,6 +714,7 @@ start_again:
 	} else if (err)
 		goto errout;
 
+	ECFS_DEBUG("goal=%lld flags=%d ino=%lld", goal, flags, ino);
 	dbg_print_extent("ext_falloc initial", &left_extent);
 	next = left_extent.e_lblk + left_extent.e_len;
 	if (left_extent.e_lblk > start) {
@@ -836,12 +840,14 @@ errcode_t ext2fs_fallocate(ext2_filsys fs, int flags, ext2_ino_t ino,
 		   start, len, goal);
 
 	if (inode->i_flags & EXT4_EXTENTS_FL) {
+		ECFS_DEBUG("goal=%lld flags=%d ino=%lld", goal, flags, ino);
 		err = extent_fallocate(fs, flags, ino, inode, goal, start, len);
 		goto out;
 	}
 
 	/* XXX: Allocate a bunch of blocks the slow way */
 	for (blk = start; blk < start + len; blk++) {
+		ECFS_DEBUG("goal=%lld flags=%d ino=%lld", goal, flags, ino);
 		err = ext2fs_bmap2(fs, ino, inode, NULL, 0, blk, 0, &x);
 		if (err)
 			return err;

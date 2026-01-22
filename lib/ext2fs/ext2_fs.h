@@ -396,7 +396,7 @@ struct ext4_new_group_input {
 #define EXT4_IOC_RESIZE_FS		_IOW('f', 16, __u64)
 
 /*
- * Structure of an inode on the disk
+ * Structure of an inode on the disk 124+60=184
  */
 struct ext2_inode {
 /*00*/	__u16	i_mode;		/* File mode */
@@ -444,7 +444,7 @@ struct ext2_inode {
 };
 
 /*
- * Permanent part of an large inode on the disk
+ * Permanent part of an large inode on the disk 160+60=220
  */
 struct ext2_inode_large {
 /*00*/	__u16	i_mode;		/* File mode */
@@ -466,11 +466,11 @@ struct ext2_inode_large {
 			__u32  h_i_translator;
 		} hurd1;
 	} osd1;				/* OS dependent 1 */
-/*28*/	__u32	i_block[EXT2_N_BLOCKS];/* Pointers to blocks */
-/*64*/	__u32	i_generation;	/* File version (for NFS) */
+/*28*/	__u64	i_block[EXT2_N_BLOCKS];/* Pointers to blocks */
+/*A0 <- 64 +3C*/	__u32	i_generation;	/* File version (for NFS) */
 	__u32	i_file_acl;	/* File ACL */
 	__u32	i_size_high;
-/*70*/	__u32	i_faddr;	/* Fragment address */
+/*AC <- 70*/	__u32	i_faddr;	/* Fragment address */
 	union {
 		struct {
 			__u16	l_i_blocks_hi;
@@ -489,15 +489,15 @@ struct ext2_inode_large {
 			__u32	h_i_author;
 		} hurd2;
 	} osd2;				/* OS dependent 2 */
-/*80*/	__u16	i_extra_isize;
+/*BC <- 80*/	__u16	i_extra_isize;
 	__u16	i_checksum_hi;	/* crc32c(uuid+inum+inode) */
 	__u32	i_ctime_extra;	/* extra Change time (nsec << 2 | epoch) */
 	__u32	i_mtime_extra;	/* extra Modification time (nsec << 2 | epoch) */
 	__u32	i_atime_extra;	/* extra Access time (nsec << 2 | epoch) */
-/*90*/	__u32	i_crtime;	/* File creation time */
+/*CC <- 90*/	__u32	i_crtime;	/* File creation time */
 	__u32	i_crtime_extra;	/* extra File creation time (nsec << 2 | epoch)*/
 	__u32	i_version_hi;	/* high 32 bits for 64-bit version */
-/*9c*/	__u32   i_projid;       /* Project ID */
+/*D8 <- 9c*/	__u32   i_projid;       /* Project ID */
 };
 
 #define EXT4_INODE_CSUM_HI_EXTRA_END	\
@@ -717,7 +717,7 @@ struct ext2_super_block {
 /*100*/	__u32	s_default_mount_opts;	/* default EXT2_MOUNT_* flags used */
 	__u32	s_first_meta_bg;	/* First metablock group */
 	__u32	s_mkfs_time;		/* When the filesystem was created */
-/*10c*/	__u32	s_jnl_blocks[17];	/* Backup of the journal inode */
+/*10c*/	__u64	s_jnl_blocks[17];	/* Backup of the journal inode */
 /*150*/	__u32	s_blocks_count_hi;	/* Blocks count high 32bits */
 	__u32	s_r_blocks_count_hi;	/* Reserved blocks count high 32 bits*/
 	__u32	s_free_blocks_hi;	/* Free blocks count */
@@ -773,7 +773,7 @@ struct ext2_super_block {
 	__le32  s_orphan_file_inum;	/* Inode for tracking orphan inodes */
 	__le16  s_node_id;	/* node id, start from 1 */
 	__le16  s_disk_id;	/* disk id, start form 0 */
-	__le32	s_reserved[93];		/* Padding to the end of the block */
+	__le32	s_reserved[75];		/* Padding to the end of the block */
 /*3fc*/	__u32	s_checksum;		/* crc32c(superblock) */
 };
 
@@ -1211,7 +1211,7 @@ struct mmp_struct {
 /*
  * Minimum size of inline data.
  */
-#define EXT4_MIN_INLINE_DATA_SIZE	((sizeof(__u32) * EXT2_N_BLOCKS))
+#define EXT4_MIN_INLINE_DATA_SIZE	((sizeof(__u64) * EXT2_N_BLOCKS))
 
 /*
  * Size of a parent inode in inline data directory.

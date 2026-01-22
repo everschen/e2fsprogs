@@ -90,6 +90,7 @@ errcode_t ext2fs_expand_dir(ext2_filsys fs, ext2_ino_t dir)
 	struct expand_dir_struct es;
 	struct ext2_inode	inode;
 
+	ECFS_DEBUG("dir=%lld", dir);
 	EXT2_CHECK_MAGIC(fs, EXT2_ET_MAGIC_EXT2FS_FILSYS);
 
 	if (!(fs->flags & EXT2_FLAG_RW))

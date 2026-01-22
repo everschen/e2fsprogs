@@ -438,7 +438,7 @@ _INLINE_ int ext2fs_mark_inode_bitmap2(ext2fs_inode_bitmap bitmap,
 				       ext2_ino_t inode)
 {
 	return ext2fs_mark_generic_bmap((ext2fs_generic_bitmap) bitmap,
-					inode);
+					fid_get_ino(inode));
 }
 
 _INLINE_ int ext2fs_unmark_inode_bitmap2(ext2fs_inode_bitmap bitmap,

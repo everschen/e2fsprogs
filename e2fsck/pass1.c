@@ -1701,10 +1701,10 @@ void e2fsck_pass1(e2fsck_t ctx)
 		     LINUX_S_ISDIR(inode->i_mode))) {
 			void *ehp;
 #ifdef WORDS_BIGENDIAN
-			__u32 tmp_block[EXT2_N_BLOCKS];
+			__u64 tmp_block[EXT2_N_BLOCKS];
 
 			for (i = 0; i < EXT2_N_BLOCKS; i++)
-				tmp_block[i] = ext2fs_swab32(inode->i_block[i]);
+				tmp_block[i] = ext2fs_swab64(inode->i_block[i]);
 			ehp = tmp_block;
 #else
 			ehp = inode->i_block;

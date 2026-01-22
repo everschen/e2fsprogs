@@ -20,7 +20,7 @@ void ext2fs_inode_alloc_stats2(ext2_filsys fs, ext2_ino_t ino,
 {
 	int	group = ext2fs_group_of_ino(fs, ino);
 
-	if (ino > fs->super->s_inodes_count) {
+	if (fid_get_ino(ino) > fs->super->s_inodes_count) {
 #ifndef OMIT_COM_ERR
 		com_err("ext2fs_inode_alloc_stats2", 0,
 			"Illegal inode number: %lu", (unsigned long) ino);

@@ -345,7 +345,7 @@ try_backup_journal:
 				goto errout;
 			memset(&j_inode->i_ext2, 0, sizeof(struct ext2_inode));
 			memcpy(&j_inode->i_ext2.i_block[0], sb->s_jnl_blocks,
-			       EXT2_N_BLOCKS*4);
+			       EXT2_N_BLOCKS*(sizeof(__le64)));
 			j_inode->i_ext2.i_size_high = sb->s_jnl_blocks[15];
 			j_inode->i_ext2.i_size = sb->s_jnl_blocks[16];
 			j_inode->i_ext2.i_links_count = 1;

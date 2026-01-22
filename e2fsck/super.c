@@ -546,7 +546,7 @@ static int release_orphan_inodes(e2fsck_t ctx)
 	}
 
 	if (ino && ((ino < EXT2_FIRST_INODE(fs->super)) ||
-	    (ino > fs->super->s_inodes_count))) {
+	    (fid_get_ino(ino) > fs->super->s_inodes_count))) {
 		fix_problem(ctx, PR_0_ORPHAN_ILLEGAL_HEAD_INODE, &pctx);
 		goto err_qctx;
 	}

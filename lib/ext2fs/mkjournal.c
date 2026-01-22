@@ -286,6 +286,7 @@ static errcode_t write_journal_inode(ext2_filsys fs, ext2_ino_t journal_ino,
 	blk64_t			zblk;
 	time_t			now;
 
+	ECFS_DEBUG("goal=%lld flags=%d journal_ino=%lld", goal, flags, journal_ino);
 	if ((retval = ext2fs_create_journal_superblock2(fs, jparams, flags,
 						       &buf)))
 		return retval;
@@ -296,6 +297,7 @@ static errcode_t write_journal_inode(ext2_filsys fs, ext2_ino_t journal_ino,
 	if ((retval = ext2fs_read_inode(fs, journal_ino, &inode)))
 		goto out2;
 
+	ECFS_DEBUG("goal=%lld flags=%d journal_ino=%lld", goal, flags, journal_ino);
 	if (inode.i_blocks > 0) {
 		retval = EEXIST;
 		goto out2;
@@ -313,6 +315,7 @@ static errcode_t write_journal_inode(ext2_filsys fs, ext2_ino_t journal_ino,
 	inode_size = (unsigned long long)fs->blocksize *
 			(jparams->num_journal_blocks + jparams->num_fc_blocks);
 	now = ext2fsP_get_time(fs);
+	ECFS_DEBUG("goal=%lld flags=%d journal_ino=%lld", goal, flags, journal_ino);
 	ext2fs_inode_xtime_set(&inode, i_mtime, now);
 	ext2fs_inode_xtime_set(&inode, i_ctime, now);
 	inode.i_links_count = 1;
@@ -321,12 +324,15 @@ static errcode_t write_journal_inode(ext2_filsys fs, ext2_ino_t journal_ino,
 	if (retval)
 		goto out2;
 
+	ECFS_DEBUG("goal=%lld flags=%d journal_ino=%lld", goal, flags, journal_ino);
 	retval = ext2fs_fallocate(fs, falloc_flags, journal_ino,
 				  &inode, goal, 0,
 				  jparams->num_journal_blocks + jparams->num_fc_blocks);
+	ECFS_DEBUG("goal=%lld flags=%d journal_ino=%lld retval=%d", goal, flags, journal_ino, retval);
 	if (retval)
 		goto out2;
 
+	ECFS_DEBUG("goal=%lld flags=%d journal_ino=%lld", goal, flags, journal_ino);
 	if ((retval = ext2fs_write_new_inode(fs, journal_ino, &inode)))
 		goto out2;
 
@@ -338,7 +344,8 @@ static errcode_t write_journal_inode(ext2_filsys fs, ext2_ino_t journal_ino,
 	if (retval)
 		goto out2;
 
-	memcpy(fs->super->s_jnl_blocks, inode.i_block, EXT2_N_BLOCKS*4);
+	ECFS_DEBUG("goal=%lld flags=%d journal_ino=%lld", goal, flags, journal_ino);
+	memcpy(fs->super->s_jnl_blocks, inode.i_block, EXT2_N_BLOCKS*(sizeof(__le64)));
 	fs->super->s_jnl_blocks[15] = inode.i_size_high;
 	fs->super->s_jnl_blocks[16] = inode.i_size;
 	fs->super->s_jnl_backup_type = EXT3_JNL_BACKUP_BLOCKS;
@@ -500,6 +507,7 @@ errcode_t ext2fs_add_journal_inode3(ext2_filsys fs, struct ext2fs_journal_params
 	int			mount_flags;
 	int			fd = -1;
 
+	ECFS_DEBUG("goal=%lld flags=%d", goal, flags);
 	if (flags & EXT2_MKJOURNAL_NO_MNT_CHECK)
 		mount_flags = 0;
 	else if ((retval = ext2fs_check_mount_point(fs->device_name,
@@ -507,6 +515,7 @@ errcode_t ext2fs_add_journal_inode3(ext2_filsys fs, struct ext2fs_journal_params
 						    jfile, sizeof(jfile)-10)))
 		return retval;
 
+	ECFS_DEBUG("goal=%lld flags=%d jfile=%s mount_flags=%d", goal, flags, jfile, mount_flags);
 	if (mount_flags & EXT2_MF_MOUNTED) {
 #if HAVE_EXT2_IOCTLS
 		int f = 0;
@@ -521,10 +530,12 @@ errcode_t ext2fs_add_journal_inode3(ext2_filsys fs, struct ext2fs_journal_params
 		(void) chflags (jfile, 0);
 #else
 #if HAVE_EXT2_IOCTLS
+		ECFS_DEBUG("goal=%lld flags=%d", goal, flags);
 		fd = open(jfile, O_RDONLY);
 		if (fd >= 0) {
 			retval = ioctl(fd, EXT2_IOC_SETFLAGS, &f);
 			close(fd);
+			ECFS_DEBUG("goal=%lld flags=%d retval=%d fd=%d", goal, flags, retval, fd);
 			if (retval)
 				return errno;
 		}
@@ -532,6 +543,7 @@ errcode_t ext2fs_add_journal_inode3(ext2_filsys fs, struct ext2fs_journal_params
 #endif
 
 		/* Create the journal file */
+		ECFS_DEBUG("goal=%lld flags=%d", goal, flags);
 		if ((fd = open(jfile, O_CREAT|O_WRONLY, 0600)) < 0)
 			return errno;
 
@@ -546,6 +558,7 @@ errcode_t ext2fs_add_journal_inode3(ext2_filsys fs, struct ext2fs_journal_params
 			goto errout;
 
 		/* Get inode number of the journal file */
+		ECFS_DEBUG("goal=%lld flags=%d", goal, flags);
 		if (fstat(fd, &st) < 0) {
 			retval = errno;
 			goto errout;
@@ -563,6 +576,7 @@ errcode_t ext2fs_add_journal_inode3(ext2_filsys fs, struct ext2fs_journal_params
 		retval = ioctl(fd, EXT2_IOC_SETFLAGS, &f);
 #endif
 #endif
+		ECFS_DEBUG("goal=%lld flags=%d", goal, flags);
 		if (retval) {
 			retval = errno;
 			goto errout;
@@ -577,16 +591,19 @@ errcode_t ext2fs_add_journal_inode3(ext2_filsys fs, struct ext2fs_journal_params
 		memset(fs->super->s_jnl_blocks, 0,
 		       sizeof(fs->super->s_jnl_blocks));
 	} else {
+		ECFS_DEBUG("goal=%lld flags=%d", goal, flags);
 		if ((mount_flags & EXT2_MF_BUSY) &&
 		    !(fs->flags & EXT2_FLAG_EXCLUSIVE)) {
 			retval = EBUSY;
 			goto errout;
 		}
 		journal_ino = EXT2_JOURNAL_INO;
+		ECFS_DEBUG("goal=%lld flags=%d", goal, flags);
 		if ((retval = write_journal_inode(fs, journal_ino,
 						  jparams, goal, flags)))
 			return retval;
 	}
+	ECFS_DEBUG("goal=%lld flags=%d", goal, flags);
 
 	fs->super->s_journal_inum = journal_ino;
 	fs->super->s_journal_dev = 0;
@@ -597,6 +614,7 @@ errcode_t ext2fs_add_journal_inode3(ext2_filsys fs, struct ext2fs_journal_params
 	ext2fs_mark_super_dirty(fs);
 	return 0;
 errout:
+	ECFS_DEBUG("goal=%lld flags=%d", goal, flags);
 	if (fd >= 0)
 		close(fd);
 	return retval;

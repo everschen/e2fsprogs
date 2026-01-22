@@ -133,7 +133,7 @@ void ext2fs_swap_super(struct ext2_super_block * sb)
 	sb->s_encoding_flags = ext2fs_swab16(sb->s_encoding_flags);
 	sb->s_orphan_file_inum = ext2fs_swab32(sb->s_orphan_file_inum);
 	/* catch when new fields are used from s_reserved */
-	EXT2FS_BUILD_BUG_ON(sizeof(sb->s_reserved) != 93 * sizeof(__le32));
+	EXT2FS_BUILD_BUG_ON(sizeof(sb->s_reserved) != 75 * sizeof(__le32));
 	sb->s_checksum = ext2fs_swab32(sb->s_checksum);
 }
 
@@ -287,7 +287,7 @@ void ext2fs_swap_inode_full(ext2_filsys fs, struct ext2_inode_large *t,
 	 */
 	if (!has_extents && !has_inline_data && (!islnk || !fast_symlink)) {
 		for (i = 0; i < EXT2_N_BLOCKS; i++)
-			t->i_block[i] = ext2fs_swab32(f->i_block[i]);
+			t->i_block[i] = ext2fs_swab64(f->i_block[i]);
 	} else if (t != f) {
 		for (i = 0; i < EXT2_N_BLOCKS; i++)
 			t->i_block[i] = f->i_block[i];
@@ -362,7 +362,7 @@ void ext2fs_swap_inode_full(ext2_filsys fs, struct ext2_inode_large *t,
 	if (ext2fs_inode_includes(inode_size, i_projid))
                 t->i_projid = ext2fs_swab32(f->i_projid);
 	/* catch new static fields added after i_projid */
-	EXT2FS_BUILD_BUG_ON(sizeof(struct ext2_inode_large) != 160);
+	EXT2FS_BUILD_BUG_ON(sizeof(struct ext2_inode_large) != 224);
 
 	i = sizeof(struct ext2_inode) + extra_isize + sizeof(__u32);
 	if (bufsize < (int) i)

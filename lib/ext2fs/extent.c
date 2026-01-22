@@ -30,7 +30,7 @@
 #include "e2image.h"
 
 #undef DEBUG
-
+//#define DEBUG
 /*
  * Definitions to be dropped in lib/ext2fs/ext2fs.h
  */
@@ -170,9 +170,17 @@ errcode_t ext2fs_extent_header_verify(void *ptr, int size)
 
 	dbg_show_header(eh);
 	if (ext2fs_le16_to_cpu(eh->eh_magic) != EXT3_EXT_MAGIC)
+	{
+		ECFS_DEBUG("size=%d eh->eh_magic=%d", size, eh->eh_magic);
 		return EXT2_ET_EXTENT_HEADER_BAD;
+	}
+
 	if (ext2fs_le16_to_cpu(eh->eh_entries) > ext2fs_le16_to_cpu(eh->eh_max))
+	{
+		ECFS_DEBUG("size=%d eh->eh_magic=%d eh->eh_max=%d", size, eh->eh_entries, eh->eh_max);
 		return EXT2_ET_EXTENT_HEADER_BAD;
+	}
+
 	if (eh->eh_depth == 0)
 		entry_size = sizeof(struct ext3_extent);
 	else
@@ -183,7 +191,10 @@ errcode_t ext2fs_extent_header_verify(void *ptr, int size)
 	 * ext4_extent_tail with checksum in the future. */
 	if ((ext2fs_le16_to_cpu(eh->eh_max) > eh_max) ||
 	    (ext2fs_le16_to_cpu(eh->eh_max) < (eh_max - 2)))
-		return EXT2_ET_EXTENT_HEADER_BAD;
+	{
+			return EXT2_ET_EXTENT_HEADER_BAD;
+	}
+
 
 	return 0;
 }
@@ -224,13 +235,16 @@ errcode_t ext2fs_extent_open2(ext2_filsys fs, ext2_ino_t ino,
 	int				i;
 	struct ext3_extent_header	*eh;
 
+	ECFS_DEBUG("ino=%lld", ino);
 	EXT2_CHECK_MAGIC(fs, EXT2_ET_MAGIC_EXT2FS_FILSYS);
 
+	ECFS_DEBUG("ino=%lld", ino);
 	if (!inode)
-		if ((ino == 0) || (ino > fs->super->s_inodes_count))
+		if ((ino == 0) || (fid_get_ino(ino) > fs->super->s_inodes_count))
 			return EXT2_ET_BAD_INODE_NUM;
 
 	retval = ext2fs_get_mem(sizeof(struct ext2_extent_handle), &handle);
+	ECFS_DEBUG("ino=%lld", ino);
 	if (retval)
 		return retval;
 	memset(handle, 0, sizeof(struct ext2_extent_handle));
@@ -238,6 +252,7 @@ errcode_t ext2fs_extent_open2(ext2_filsys fs, ext2_ino_t ino,
 	handle->ino = ino;
 	handle->fs = fs;
 
+	ECFS_DEBUG("ino=%lld", ino);
 	if (inode) {
 		handle->inode = inode;
 	} else {
@@ -247,11 +262,16 @@ errcode_t ext2fs_extent_open2(ext2_filsys fs, ext2_ino_t ino,
 			goto errout;
 	}
 
+	ECFS_DEBUG("ino=%lld", ino);
 	eh = (struct ext3_extent_header *) &handle->inode->i_block[0];
 
 	for (i=0; i < EXT2_N_BLOCKS; i++)
+	{
 		if (handle->inode->i_block[i])
 			break;
+		ECFS_DEBUG("ino=%lld, i=%d handle->inode->i_block[i]=%lld", ino, i, handle->inode->i_block[i]);
+	}
+	ECFS_DEBUG("ino=%lld, i=%d handle->inode->i_block[i]=%lld", ino, i, handle->inode->i_block[i]);
 	if (i >= EXT2_N_BLOCKS) {
 		eh->eh_magic = ext2fs_cpu_to_le16(EXT3_EXT_MAGIC);
 		eh->eh_depth = 0;
@@ -267,7 +287,9 @@ errcode_t ext2fs_extent_open2(ext2_filsys fs, ext2_ino_t ino,
 		goto errout;
 	}
 
+	ECFS_DEBUG("ino=%lld", ino);
 	retval = ext2fs_extent_header_verify(eh, sizeof(handle->inode->i_block));
+	ECFS_DEBUG("ino=%lld retval=%ld", ino, retval);
 	if (retval)
 		goto errout;
 
@@ -685,7 +707,7 @@ errcode_t ext2fs_extent_goto2(ext2_extent_handle_t handle,
 	}
 
 #ifdef DEBUG
-	printf("goto extent ino %u, level %d, %llu\n", handle->ino,
+	printf("goto extent ino %llu, level %d, %llu\n", handle->ino,
 	       leaf_level, blk);
 #endif
 
@@ -848,7 +870,7 @@ errcode_t ext2fs_extent_replace(ext2_extent_handle_t handle,
 		return EXT2_ET_NO_CURRENT_NODE;
 
 #ifdef DEBUG
-	printf("extent replace: %u ", handle->ino);
+	printf("extent replace: %llu ", handle->ino);
 	dbg_print_extent(0, extent);
 #endif
 
@@ -1182,7 +1204,7 @@ errcode_t ext2fs_extent_insert(ext2_extent_handle_t handle, int flags,
 		return EXT2_ET_NO_CURRENT_NODE;
 
 #ifdef DEBUG
-	printf("extent insert: %u ", handle->ino);
+	printf("extent insert: %llu ", handle->ino);
 	dbg_print_extent(0, extent);
 #endif
 
@@ -1284,7 +1306,7 @@ errcode_t ext2fs_extent_set_bmap(ext2_extent_handle_t handle,
 	EXT2_CHECK_MAGIC(handle, EXT2_ET_MAGIC_EXTENT_HANDLE);
 
 #ifdef DEBUG
-	printf("set_bmap ino %u log %lld phys %lld flags %d\n",
+	printf("set_bmap ino %llu log %lld phys %lld flags %d\n",
 	       handle->ino, logical, physical, flags);
 #endif
 
@@ -1652,7 +1674,7 @@ errcode_t ext2fs_extent_delete(ext2_extent_handle_t handle, int flags)
 		retval = ext2fs_extent_get(handle, EXT2_EXTENT_CURRENT,
 					   &extent);
 		if (retval == 0) {
-			printf("extent delete %u ", handle->ino);
+			printf("extent delete %llu ", handle->ino);
 			dbg_print_extent(0, &extent);
 		}
 	}

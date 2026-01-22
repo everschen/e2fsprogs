@@ -248,7 +248,7 @@ void do_logdump(int argc, ss_argv_t argv, int sci_idx EXT2FS_ATTR((unused)),
 			}
 			memset(&journal_inode, 0, sizeof(struct ext2_inode));
 			memcpy(&journal_inode.i_block[0], es->s_jnl_blocks,
-			       EXT2_N_BLOCKS*4);
+			       EXT2_N_BLOCKS*(sizeof(__le64)));
 			journal_inode.i_size_high = es->s_jnl_blocks[15];
 			journal_inode.i_size = es->s_jnl_blocks[16];
 			journal_inode.i_links_count = 1;

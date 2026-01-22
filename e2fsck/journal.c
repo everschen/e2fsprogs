@@ -1028,7 +1028,7 @@ static errcode_t e2fsck_get_journal(e2fsck_t ctx, journal_t **ret_journal)
 				goto errout;
 			memset(&j_inode->i_ext2, 0, sizeof(struct ext2_inode));
 			memcpy(&j_inode->i_ext2.i_block[0], sb->s_jnl_blocks,
-			       EXT2_N_BLOCKS*4);
+			       EXT2_N_BLOCKS*(sizeof(__le64)));
 			j_inode->i_ext2.i_size_high = sb->s_jnl_blocks[15];
 			j_inode->i_ext2.i_size = sb->s_jnl_blocks[16];
 			j_inode->i_ext2.i_links_count = 1;
@@ -1787,10 +1787,10 @@ void e2fsck_move_ext3_journal(e2fsck_t ctx)
 	 */
 	if ((sb->s_jnl_backup_type == 0) ||
 	    ((sb->s_jnl_backup_type == EXT3_JNL_BACKUP_BLOCKS) &&
-	     memcmp(inode.i_block, sb->s_jnl_blocks, EXT2_N_BLOCKS*4))) {
+	     memcmp(inode.i_block, sb->s_jnl_blocks, EXT2_N_BLOCKS*(sizeof(__le64))))) {
 		if (fix_problem(ctx, PR_0_BACKUP_JNL, &pctx)) {
 			memcpy(sb->s_jnl_blocks, inode.i_block,
-			       EXT2_N_BLOCKS*4);
+			       EXT2_N_BLOCKS*(sizeof(__le64)));
 			sb->s_jnl_blocks[15] = inode.i_size_high;
 			sb->s_jnl_blocks[16] = inode.i_size;
 			sb->s_jnl_backup_type = EXT3_JNL_BACKUP_BLOCKS;

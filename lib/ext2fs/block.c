@@ -9,6 +9,11 @@
  * %End-Header%
  */
 
+#include "../../e2fsck/e2fsck.h"
+
+#include <ctype.h>
+
+
 #include "config.h"
 #include <stdio.h>
 #include <string.h>
@@ -18,6 +23,26 @@
 
 #include "ext2_fs.h"
 #include "ext2fs.h"
+
+struct process_block_struct {
+	ext2_ino_t	ino;
+	unsigned	is_dir:1, is_reg:1, clear:1, suppress:1,
+				fragmented:1, compressed:1, bbcheck:1,
+				inode_modified:1;
+	blk64_t		num_blocks;
+	blk64_t		max_blocks;
+	blk64_t		last_block;
+	e2_blkcnt_t	last_init_lblock;
+	e2_blkcnt_t	last_db_block;
+	int		num_illegal_blocks;
+	blk64_t		previous_block;
+	struct ext2_inode *inode;
+	struct problem_context *pctx;
+	ext2fs_block_bitmap fs_meta_blocks;
+	e2fsck_t	ctx;
+	blk64_t		next_lblock;
+	struct extent_tree_info	eti;
+};
 
 struct block_context {
 	ext2_filsys	fs;
@@ -65,7 +90,7 @@ static int block_iterate_ind(blk_t *ind_block, blk_t ref_block,
 	blk_t	*block_nr;
 	blk64_t	blk64;
 
-	limit = ctx->fs->blocksize >> 2;
+	limit = ctx->fs->blocksize / sizeof(blk_t);
 	if (!(ctx->flags & BLOCK_FLAG_DEPTH_TRAVERSE) &&
 	    !(ctx->flags & BLOCK_FLAG_DATA_ONLY)) {
 		blk64 = *ind_block;
@@ -79,9 +104,10 @@ static int block_iterate_ind(blk_t *ind_block, blk_t ref_block,
 		ctx->bcount += limit;
 		return ret;
 	}
-	if (*ind_block >= ext2fs_blocks_count(ctx->fs->super) ||
-	    *ind_block < ctx->fs->super->s_first_data_block) {
+	if (gid_get_lid(*ind_block) >= ext2fs_blocks_count(ctx->fs->super) ||
+	    gid_get_lid(*ind_block) < ctx->fs->super->s_first_data_block) {
 		ctx->errcode = EXT2_ET_BAD_IND_BLOCK;
+		ECFS_DEBUG("*ind_block=%d ext2fs_blocks_count(ctx->fs->super)=%d ctx->fs->super->s_first_data_block=%d", *ind_block, ext2fs_blocks_count(ctx->fs->super), ctx->fs->super->s_first_data_block);
 		ret |= BLOCK_ERROR;
 		return ret;
 	}
@@ -154,7 +180,7 @@ static int block_iterate_dind(blk_t *dind_block, blk_t ref_block,
 	blk_t	*block_nr;
 	blk64_t	blk64;
 
-	limit = ctx->fs->blocksize >> 2;
+	limit = ctx->fs->blocksize / sizeof(blk_t);
 	if (!(ctx->flags & (BLOCK_FLAG_DEPTH_TRAVERSE |
 			    BLOCK_FLAG_DATA_ONLY))) {
 		blk64 = *dind_block;
@@ -168,8 +194,8 @@ static int block_iterate_dind(blk_t *dind_block, blk_t ref_block,
 		ctx->bcount += limit*limit;
 		return ret;
 	}
-	if (*dind_block >= ext2fs_blocks_count(ctx->fs->super) ||
-	    *dind_block < ctx->fs->super->s_first_data_block) {
+	if (gid_get_lid(*dind_block) >= ext2fs_blocks_count(ctx->fs->super) ||
+	    gid_get_lid(*dind_block) < ctx->fs->super->s_first_data_block) {
 		ctx->errcode = EXT2_ET_BAD_DIND_BLOCK;
 		ret |= BLOCK_ERROR;
 		return ret;
@@ -182,11 +208,18 @@ static int block_iterate_dind(blk_t *dind_block, blk_t ref_block,
 	}
 
 	block_nr = (blk_t *) ctx->dind_buf;
+
+	// FILE *fp = fopen("/tmp/fs_debug.log", "a");
+	// fprint_hex_dump(fp,
+	// 		"dump: ",
+	// 		block_nr, 256,
+	// 		16, 1);
+
 	offset = 0;
 	if (ctx->flags & BLOCK_FLAG_APPEND) {
 		for (i = 0; i < limit; i++, block_nr++) {
 			flags = block_iterate_ind(block_nr,
-						  *dind_block, offset,
+						  gid_get_lid(*dind_block), offset,
 						  ctx);
 			changed |= flags;
 			if (flags & (BLOCK_ABORT | BLOCK_ERROR)) {
@@ -197,24 +230,28 @@ static int block_iterate_dind(blk_t *dind_block, blk_t ref_block,
 		}
 	} else {
 		for (i = 0; i < limit; i++, block_nr++) {
+
 			if (*block_nr == 0) {
 				ctx->bcount += limit;
 				continue;
 			}
+
 			flags = block_iterate_ind(block_nr,
-						  *dind_block, offset,
+						  gid_get_lid(*dind_block), offset,
 						  ctx);
 			changed |= flags;
 			if (flags & (BLOCK_ABORT | BLOCK_ERROR)) {
 				ret |= flags & (BLOCK_ABORT | BLOCK_ERROR);
 				break;
 			}
+
 			offset += sizeof(blk_t);
 		}
 	}
+
 	check_for_ro_violation_return(ctx, changed);
 	if (changed & BLOCK_CHANGED) {
-		ctx->errcode = ext2fs_write_ind_block(ctx->fs, *dind_block,
+		ctx->errcode = ext2fs_write_ind_block(ctx->fs, gid_get_lid(*dind_block),
 						      ctx->dind_buf);
 		if (ctx->errcode)
 			ret |= BLOCK_ERROR | BLOCK_ABORT;
@@ -222,7 +259,7 @@ static int block_iterate_dind(blk_t *dind_block, blk_t ref_block,
 	if ((ctx->flags & BLOCK_FLAG_DEPTH_TRAVERSE) &&
 	    !(ctx->flags & BLOCK_FLAG_DATA_ONLY) &&
 	    !(ret & BLOCK_ABORT)) {
-		blk64 = *dind_block;
+		blk64 = gid_get_lid(*dind_block);
 		ret |= (*ctx->func)(ctx->fs, &blk64,
 				    BLOCK_COUNT_DIND, ref_block,
 				    ref_offset, ctx->priv_data);
@@ -240,7 +277,7 @@ static int block_iterate_tind(blk_t *tind_block, blk_t ref_block,
 	blk_t	*block_nr;
 	blk64_t	blk64;
 
-	limit = ctx->fs->blocksize >> 2;
+	limit = ctx->fs->blocksize / sizeof(blk_t);
 	if (!(ctx->flags & (BLOCK_FLAG_DEPTH_TRAVERSE |
 			    BLOCK_FLAG_DATA_ONLY))) {
 		blk64 = *tind_block;
@@ -254,8 +291,8 @@ static int block_iterate_tind(blk_t *tind_block, blk_t ref_block,
 		ctx->bcount += ((unsigned long long) limit)*limit*limit;
 		return ret;
 	}
-	if (*tind_block >= ext2fs_blocks_count(ctx->fs->super) ||
-	    *tind_block < ctx->fs->super->s_first_data_block) {
+	if (gid_get_lid(*tind_block) >= ext2fs_blocks_count(ctx->fs->super) ||
+	    gid_get_lid(*tind_block) < ctx->fs->super->s_first_data_block) {
 		ctx->errcode = EXT2_ET_BAD_TIND_BLOCK;
 		ret |= BLOCK_ERROR;
 		return ret;
@@ -360,7 +397,7 @@ errcode_t ext2fs_block_iterate3(ext2_filsys fs,
 			return EXT2_ET_FILE_TOO_BIG;
 	}
 
-	limit = fs->blocksize >> 2;
+	limit = fs->blocksize / sizeof(blk_t);
 
 	ctx.fs = fs;
 	ctx.func = func;
@@ -474,7 +511,7 @@ errcode_t ext2fs_block_iterate3(ext2_filsys fs,
 			 */
 			retval = ext2fs_extent_get(handle, op, &next);
 
-#if 0
+#if 1
 			printf("lblk %llu pblk %llu len %d blockcnt %llu\n",
 			       extent.e_lblk, extent.e_pblk,
 			       extent.e_len, blockcnt);
@@ -523,13 +560,16 @@ errcode_t ext2fs_block_iterate3(ext2_filsys fs,
 	for (i = 0; i < EXT2_NDIR_BLOCKS ; i++, ctx.bcount++) {
 		if (inode.i_block[i] || (flags & BLOCK_FLAG_APPEND)) {
 			blk64 = inode.i_block[i];
+			ECFS_OUTPUT("error here? inode.i_block[%d]=%d", i, inode.i_block[i]);
 			ret |= (*ctx.func)(fs, &blk64, ctx.bcount, 0, i, 
 					   priv_data);
 			inode.i_block[i] = (blk_t) blk64;
+			ECFS_OUTPUT("error here? inode.i_block[%d]=%d blk64=%d", i, inode.i_block[i], blk64);
 			if (ret & BLOCK_ABORT)
 				goto abort_exit;
 		}
 	}
+
 	check_for_ro_violation_goto(&ctx, ret, abort_exit);
 	if (inode.i_block[EXT2_IND_BLOCK] || (flags & BLOCK_FLAG_APPEND)) {
 		ret |= block_iterate_ind(&inode.i_block[EXT2_IND_BLOCK], 
@@ -538,19 +578,24 @@ errcode_t ext2fs_block_iterate3(ext2_filsys fs,
 			goto abort_exit;
 	} else
 		ctx.bcount += limit;
+
 	if (inode.i_block[EXT2_DIND_BLOCK] || (flags & BLOCK_FLAG_APPEND)) {
+
 		ret |= block_iterate_dind(&inode.i_block[EXT2_DIND_BLOCK],
 					  0, EXT2_DIND_BLOCK, &ctx);
+
 		if (ret & BLOCK_ABORT)
 			goto abort_exit;
 	} else
 		ctx.bcount += limit * limit;
+
 	if (inode.i_block[EXT2_TIND_BLOCK] || (flags & BLOCK_FLAG_APPEND)) {
 		ret |= block_iterate_tind(&inode.i_block[EXT2_TIND_BLOCK],
 					  0, EXT2_TIND_BLOCK, &ctx);
 		if (ret & BLOCK_ABORT)
 			goto abort_exit;
 	}
+
 
 abort_exit:
 	if (ret & BLOCK_CHANGED) {

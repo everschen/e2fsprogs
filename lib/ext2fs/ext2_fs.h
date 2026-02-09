@@ -17,6 +17,7 @@
 #define _LINUX_EXT2_FS_H
 
 #include <ext2fs/ext2_types.h>		/* Changed from linux/types.h */
+#include <stdio.h>
 
 #ifndef __GNUC_PREREQ
 #if defined(__GNUC__) && defined(__GNUC_MINOR__)
@@ -114,7 +115,7 @@
 #define EXT2_FIRST_INO(s)	(((s)->s_rev_level == EXT2_GOOD_OLD_REV) ? \
 				 EXT2_GOOD_OLD_FIRST_INO : (s)->s_first_ino)
 #endif
-#define EXT2_ADDR_PER_BLOCK(s)	(EXT2_BLOCK_SIZE(s) / sizeof(__u32))
+#define EXT2_ADDR_PER_BLOCK(s)	(EXT2_BLOCK_SIZE(s) / sizeof(__u64))
 
 /*
  * Macro-instructions used to manage allocation clusters
@@ -1116,7 +1117,7 @@ struct ext2_dir_entry_tail {
  * Debug code
  */
 
-#define ECFS_DEBUG_ENABLE
+//#define ECFS_DEBUG_ENABLE
 //#undef ECFS_DEBUG_ENABLE
 
 #ifdef ECFS_DEBUG_ENABLE
@@ -1129,6 +1130,13 @@ struct ext2_dir_entry_tail {
 #else
 #define ECFS_DEBUG(...)	do {} while (0)
 #endif
+
+#define ECFS_OUTPUT(...) \
+    do { \
+        fprintf(stderr, "ECFS e2fs debug %s:%d: ", __FUNCTION__, __LINE__); \
+        fprintf(stderr, __VA_ARGS__); \
+        fprintf(stderr, "\n\n"); \
+    } while(0)
 
 
 static inline unsigned int ext2fs_dir_rec_len(__u8 name_len,
@@ -1233,38 +1241,46 @@ struct mmp_struct {
  * 31.. 0: ino     (32 bits)
  */
 
-#define FID_NODE_SHIFT 48
-#define FID_DISK_SHIFT 32
+#define GID_NODE_SHIFT 48
+#define GID_DISK_SHIFT 32
 
 
-static inline uint64_t make_fid(uint16_t node_id, uint16_t disk_id, uint32_t ino) {
-    uint64_t fid = 0;
-    fid |= ((uint64_t)node_id << FID_NODE_SHIFT);
-    fid |= ((uint64_t)disk_id  << FID_DISK_SHIFT);
-    fid |= (uint64_t)ino;
-    return fid;
+static inline uint64_t make_gid(uint16_t node_id, uint16_t disk_id, uint32_t lid) {
+    uint64_t gid = 0;
+    gid |= ((uint64_t)node_id << GID_NODE_SHIFT);
+    gid |= ((uint64_t)disk_id  << GID_DISK_SHIFT);
+    gid |= (uint64_t)lid;
+    return gid;
 }
 
-static inline uint16_t fid_get_node_id(uint64_t fid) {
-    return (uint16_t)((fid >> FID_NODE_SHIFT) & 0xFFFFu);
+static inline uint16_t gid_get_node_id(uint64_t gid) {
+    return (uint16_t)((gid >> GID_NODE_SHIFT) & 0xFFFFu);
 }
 
-static inline uint16_t fid_get_disk_id(uint64_t fid) {
-    return (uint16_t)((fid >> FID_DISK_SHIFT) & 0xFFFFu);
+static inline uint16_t gid_get_disk_id(uint64_t gid) {
+    return (uint16_t)((gid >> GID_DISK_SHIFT) & 0xFFFFu);
 }
 
-static inline uint32_t fid_get_ino(uint64_t fid) {
-    return (uint32_t)(fid & 0xFFFFFFFFu);
+static inline uint32_t gid_get_lid(uint64_t gid) {
+    return (uint32_t)(gid & 0xFFFFFFFFu);
 }
 
-static inline uint32_t fid_get_node_and_disk_id(uint64_t fid)
+static inline uint32_t gid_get_node_and_disk_id(uint64_t gid)
 {
-    return (uint32_t)(fid >> FID_DISK_SHIFT);
+    return (uint32_t)(gid >> GID_DISK_SHIFT);
 }
 
-static inline uint64_t make_fid_sb(struct ext2_super_block *sb, uint32_t ino) {
-    return make_fid(sb->s_node_id, sb->s_disk_id, ino);
+static inline uint64_t make_gid_sb(struct ext2_super_block *sb, uint32_t lid) {
+    return make_gid(sb->s_node_id, sb->s_disk_id, lid);
 }
 
+void fprint_hex_dump(FILE *fp,
+                     const char *prefix,
+                     const void *buf,
+                     size_t len,
+                     size_t rowsize,   /* 一行多少字节，内核常用 16 */
+                     size_t groupsize);
+
+void dump_stack_user(void);
 
 #endif	/* _LINUX_EXT2_FS_H */

@@ -64,7 +64,7 @@ errcode_t ext2fs_mkdir2(ext2_filsys fs, ext2_ino_t parent, ext2_ino_t ino,
 					  0, &ino);
 		if (retval)
 			goto cleanup;
-		ino  = make_fid_sb(fs->super, ino);
+		ino  = make_gid_sb(fs->super, ino);
 	}
 	if (ret_ino)
 		*ret_ino = ino;

@@ -19,8 +19,8 @@
 #include "ext2fs.h"
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-//#undef DEBUG
-#define DEBUG
+#undef DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 # define dbg_printf(f, a...)  do {printf(f, ## a); fflush(stdout); } while (0)

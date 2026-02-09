@@ -84,7 +84,7 @@ errcode_t ext2fs_create_resize_inode(ext2_filsys fs)
 	errcode_t		retval, retval2;
 	struct ext2_super_block	*sb;
 	struct ext2_inode	inode;
-	__u32			*dindir_buf, *gdt_buf;
+	__u64			*dindir_buf, *gdt_buf;
 	unsigned long long	apb, inode_size;
 	/* FIXME-64 - can't deal with extents */
 	blk_t			dindir_blk, rsv_off, gdt_off, gdt_blk;
@@ -97,7 +97,7 @@ errcode_t ext2fs_create_resize_inode(ext2_filsys fs)
 	retval = ext2fs_get_array(2, fs->blocksize, &dindir_buf);
 	if (retval)
 		return retval;
-	gdt_buf = (__u32 *)((char *)dindir_buf + fs->blocksize);
+	gdt_buf = (__u64 *)((char *)dindir_buf + fs->blocksize);
 
 	retval = ext2fs_read_inode(fs, EXT2_RESIZE_INO, &inode);
 	if (retval)
@@ -114,32 +114,40 @@ errcode_t ext2fs_create_resize_inode(ext2_filsys fs)
 
 	/* Maximum possible file size (we only use double indirect blocks) */
 	apb = EXT2_ADDR_PER_BLOCK(sb);
+	ECFS_DEBUG("dindir_blk=%d inode.i_block[EXT2_DIND_BLOCK]=%d EXT2_DIND_BLOCK=%d", dindir_blk, inode.i_block[EXT2_DIND_BLOCK], EXT2_DIND_BLOCK);
 	if ((dindir_blk = inode.i_block[EXT2_DIND_BLOCK])) {
 #ifdef RES_GDT_DEBUG
 		printf("reading GDT dindir %u\n", dindir_blk);
 #endif
+		ECFS_DEBUG("dindir_blk=%d inode.i_block[EXT2_DIND_BLOCK]=%d EXT2_DIND_BLOCK=%d", dindir_blk, inode.i_block[EXT2_DIND_BLOCK], EXT2_DIND_BLOCK);
 		retval = ext2fs_read_ind_block(fs, dindir_blk, dindir_buf);
 		if (retval)
 			goto out_inode;
 	} else {
+		
 		blk_t goal = sb_blk + fs->desc_blocks +
 			sb->s_reserved_gdt_blocks + 2 +
 			fs->inode_blocks_per_group;
 
+		ECFS_DEBUG("sb_blk=%d fs->desc_blocks=%d sb->s_reserved_gdt_blocks=%d fs->inode_blocks_per_group=%d", sb_blk, fs->desc_blocks, sb->s_reserved_gdt_blocks, fs->inode_blocks_per_group);
+		ECFS_DEBUG("dindir_blk=%d inode.i_block[EXT2_DIND_BLOCK]=%d EXT2_DIND_BLOCK=%d goal=%d", dindir_blk, inode.i_block[EXT2_DIND_BLOCK], EXT2_DIND_BLOCK, goal);
+		
 		retval = ext2fs_alloc_block(fs, goal, 0, &dindir_blk);
 		if (retval)
 			goto out_free;
 		inode.i_mode = LINUX_S_IFREG | 0600;
 		inode.i_links_count = 1;
-		inode.i_block[EXT2_DIND_BLOCK] = dindir_blk;
+		inode.i_block[EXT2_DIND_BLOCK] = make_gid_sb(fs->super, dindir_blk);
 		ext2fs_iblk_set(fs, &inode, 1);
 		memset(dindir_buf, 0, fs->blocksize);
 #ifdef RES_GDT_DEBUG
 		printf("allocated GDT dindir %u\n", dindir_blk);
 #endif
 		dindir_dirty = inode_dirty = 1;
-		inode_size = apb*apb + apb + EXT2_NDIR_BLOCKS;
+		inode_size = apb*apb + apb + EXT2_NDIR_BLOCKS; // EXT2_NDIR_BLOCKS 0-11, 12 SIB, 13 DIB, 14 TIB
+		ECFS_DEBUG("apb=%d EXT2_NDIR_BLOCKS=%d inode_size=%d", apb, EXT2_NDIR_BLOCKS, inode_size);
 		inode_size *= fs->blocksize;
+		ECFS_DEBUG("apb=%d EXT2_NDIR_BLOCKS=%d inode_size=%d", apb, EXT2_NDIR_BLOCKS, inode_size);
 		retval = ext2fs_inode_size_set(fs, &inode, inode_size);
 		if (retval)
 			goto out_free;
@@ -169,7 +177,7 @@ errcode_t ext2fs_create_resize_inode(ext2_filsys fs)
 			*/
 			gdt_dirty = dindir_dirty = inode_dirty = 1;
 			memset(gdt_buf, 0, fs->blocksize);
-			dindir_buf[gdt_off] = gdt_blk;
+			dindir_buf[gdt_off] = make_gid_sb(fs->super, gdt_blk);
 			ext2fs_iblk_add_blocks(fs, &inode, 1);
 #ifdef RES_GDT_DEBUG
 			printf("added primary GDT block %u at %u[%u]\n",
@@ -215,7 +223,7 @@ errcode_t ext2fs_create_resize_inode(ext2_filsys fs)
 		}
 		if (gdt_dirty) {
 #ifdef RES_GDT_DEBUG
-			printf("writing primary GDT block %u\n", gdt_blk);
+			printf("writing primary GDT block %u\n\n", gdt_blk);
 #endif
 			retval = ext2fs_write_ind_block(fs, gdt_blk, gdt_buf);
 			if (retval)

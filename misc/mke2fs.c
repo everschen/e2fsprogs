@@ -576,7 +576,7 @@ static void create_lost_and_found(ext2_filsys fs)
 		if ((lpf_size += fs->blocksize) >= 16*1024 &&
 		    lpf_size >= 2 * fs->blocksize)
 			break;
-		retval = ext2fs_expand_dir(fs, make_fid_sb(fs->super, ino));
+		retval = ext2fs_expand_dir(fs, make_gid_sb(fs->super, ino));
 		if (retval) {
 			com_err("ext2fs_expand_dir", retval, "%s",
 				_("while expanding /lost+found"));

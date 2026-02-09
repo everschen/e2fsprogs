@@ -129,8 +129,8 @@ static int check_bb_inode_blocks(ext2_filsys fs,
 	/*
 	 * If the block number is outrageous, clear it and ignore it.
 	 */
-	if (*block_nr >= ext2fs_blocks_count(fs->super) ||
-	    *block_nr < fs->super->s_first_data_block) {
+	if (gid_get_lid(*block_nr) >= ext2fs_blocks_count(fs->super) ||
+	    gid_get_lid(*block_nr) < fs->super->s_first_data_block) {
 		printf(_("Warning: illegal block %llu found in bad block inode.  "
 			 "Cleared.\n"), *block_nr);
 		*block_nr = 0;

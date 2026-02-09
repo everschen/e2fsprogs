@@ -211,9 +211,11 @@ static errcode_t inode_read_blk64(io_channel channel,
 	struct inode_private_data *data;
 	errcode_t	retval;
 
+	ECFS_OUTPUT("error here? block=%d", block);
 	EXT2_CHECK_MAGIC(channel, EXT2_ET_MAGIC_IO_CHANNEL);
 	data = (struct inode_private_data *) channel->private_data;
 	EXT2_CHECK_MAGIC(data, EXT2_ET_MAGIC_INODE_IO_CHANNEL);
+	ECFS_OUTPUT("error here? block=%d", block);
 
 	if ((retval = ext2fs_file_llseek(data->file,
 				(ext2_off64_t)(block * channel->block_size),
@@ -221,6 +223,7 @@ static errcode_t inode_read_blk64(io_channel channel,
 		return retval;
 
 	count = (count < 0) ? -count : (count * channel->block_size);
+	ECFS_OUTPUT("error here? block=%d", block);
 
 	return ext2fs_file_read(data->file, buf, count, 0);
 }

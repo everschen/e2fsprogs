@@ -240,7 +240,7 @@ errcode_t ext2fs_extent_open2(ext2_filsys fs, ext2_ino_t ino,
 
 	ECFS_DEBUG("ino=%lld", ino);
 	if (!inode)
-		if ((ino == 0) || (fid_get_ino(ino) > fs->super->s_inodes_count))
+		if ((ino == 0) || (gid_get_lid(ino) > fs->super->s_inodes_count))
 			return EXT2_ET_BAD_INODE_NUM;
 
 	retval = ext2fs_get_mem(sizeof(struct ext2_extent_handle), &handle);

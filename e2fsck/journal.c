@@ -266,8 +266,8 @@ static int process_journal_block(ext2_filsys fs,
 
 	p = (struct process_block_struct *) priv_data;
 
-	if (!blk || blk < fs->super->s_first_data_block ||
-	    blk >= ext2fs_blocks_count(fs->super))
+	if (!gid_get_lid(blk) || gid_get_lid(blk) < fs->super->s_first_data_block ||
+	    gid_get_lid(blk) >= ext2fs_blocks_count(fs->super))
 		return BLOCK_ABORT;
 
 	if (blockcnt >= 0)

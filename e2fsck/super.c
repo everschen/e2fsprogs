@@ -108,8 +108,8 @@ static int release_inode_block(ext2_filsys fs,
 
 	pb->last_cluster = cluster;
 
-	if ((blk < fs->super->s_first_data_block) ||
-	    (blk >= ext2fs_blocks_count(fs->super))) {
+	if ((gid_get_lid(blk) < fs->super->s_first_data_block) ||
+	    (gid_get_lid(blk) >= ext2fs_blocks_count(fs->super))) {
 		fix_problem(ctx, PR_0_ORPHAN_ILLEGAL_BLOCK_NUM, pctx);
 	return_abort:
 		pb->abort = 1;
@@ -140,7 +140,7 @@ static int release_inode_block(ext2_filsys fs,
 			if (pb->errcode)
 				goto return_abort;
 
-			limit = fs->blocksize >> 2;
+			limit = fs->blocksize / sizeof(blk_t);
 			for (i = 0, bp = (blk_t *) pb->buf;
 			     i < limit;	 i++, bp++)
 				if (*bp)
@@ -546,7 +546,7 @@ static int release_orphan_inodes(e2fsck_t ctx)
 	}
 
 	if (ino && ((ino < EXT2_FIRST_INODE(fs->super)) ||
-	    (fid_get_ino(ino) > fs->super->s_inodes_count))) {
+	    (gid_get_lid(ino) > fs->super->s_inodes_count))) {
 		fix_problem(ctx, PR_0_ORPHAN_ILLEGAL_HEAD_INODE, &pctx);
 		goto err_qctx;
 	}
@@ -726,7 +726,7 @@ void check_resize_inode(e2fsck_t ctx)
 	dgrp_t		j;
 	blk_t		blk, pblk;
 	blk_t		expect;	/* for resize inode, which is 32-bit only */
-	__u32 		*dind_buf = 0, *ind_buf;
+	__u64 		*dind_buf = 0, *ind_buf;
 	errcode_t	retval;
 
 	clear_problem_context(&pctx);
@@ -787,14 +787,15 @@ void check_resize_inode(e2fsck_t ctx)
 	 */
 	blk = inode.i_block[EXT2_DIND_BLOCK];
 	for (i=0; i < EXT2_N_BLOCKS; i++) {
-		if (i != EXT2_DIND_BLOCK && inode.i_block[i])
+		if (i != EXT2_DIND_BLOCK && gid_get_lid(inode.i_block[i]))
 			break;
 	}
-	if ((i < EXT2_N_BLOCKS) || !blk || !inode.i_links_count ||
+	if ((i < EXT2_N_BLOCKS) || !gid_get_lid(blk) || !inode.i_links_count ||
 	    !(inode.i_mode & LINUX_S_IFREG) ||
-	    (blk < fs->super->s_first_data_block ||
-	     blk >= ext2fs_blocks_count(fs->super))) {
+	    (gid_get_lid(blk) < fs->super->s_first_data_block ||
+	     gid_get_lid(blk) >= ext2fs_blocks_count(fs->super))) {
 	resize_inode_invalid:
+		ECFS_OUTPUT("error 111 blk=%d gid_get_lid(blk)=%d ext2fs_blocks_count(fs->super)=%d \n fs->super->s_first_data_block=%d", blk, gid_get_lid(blk), ext2fs_blocks_count(fs->super), fs->super->s_first_data_block);
 		if (fix_problem(ctx, PR_0_RESIZE_INODE_INVALID, &pctx)) {
 			memset(&inode, 0, sizeof(inode));
 			e2fsck_write_inode(ctx, EXT2_RESIZE_INO, &inode,
@@ -807,11 +808,11 @@ void check_resize_inode(e2fsck_t ctx)
 		}
 		goto cleanup;
 	}
-	dind_buf = (__u32 *) e2fsck_allocate_memory(ctx, fs->blocksize * 2,
+	dind_buf = (__u64 *) e2fsck_allocate_memory(ctx, fs->blocksize * 2,
 						    "resize dind buffer");
-	ind_buf = (__u32 *) ((char *) dind_buf + fs->blocksize);
+	ind_buf = (__u64 *) ((char *) dind_buf + fs->blocksize);
 
-	retval = ext2fs_read_ind_block(fs, blk, dind_buf);
+	retval = ext2fs_read_ind_block(fs, gid_get_lid(blk), dind_buf);
 	if (retval)
 		goto resize_inode_invalid;
 
@@ -822,7 +823,7 @@ void check_resize_inode(e2fsck_t ctx)
 	for (i = 0; i < fs->super->s_reserved_gdt_blocks / 4;
 	     i++, gdt_off++, pblk++) {
 		gdt_off %= fs->blocksize/4;
-		if (dind_buf[gdt_off] != pblk)
+		if (gid_get_lid(dind_buf[gdt_off]) != pblk)
 			goto resize_inode_invalid;
 		retval = ext2fs_read_ind_block(fs, pblk, ind_buf);
 		if (retval)

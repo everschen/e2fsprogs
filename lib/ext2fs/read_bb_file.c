@@ -62,8 +62,8 @@ errcode_t ext2fs_read_bb_FILE2(ext2_filsys fs, FILE *f,
 		if (blockno >> 32)
 			return EOVERFLOW;
 		if (fs &&
-		    ((blockno < fs->super->s_first_data_block) ||
-		     (blockno >= ext2fs_blocks_count(fs->super)))) {
+		    ((gid_get_lid(blockno) < fs->super->s_first_data_block) ||
+		     (gid_get_lid(blockno) >= ext2fs_blocks_count(fs->super)))) {
 			if (invalid)
 				(invalid)(fs, (blk64_t) blockno, buf, priv_data);
 			continue;

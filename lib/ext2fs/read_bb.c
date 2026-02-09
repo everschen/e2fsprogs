@@ -49,8 +49,8 @@ static int mark_bad_block(ext2_filsys fs, blk_t *block_nr,
 	if (blockcnt < 0)
 		return 0;
 
-	if ((*block_nr < fs->super->s_first_data_block) ||
-	    (*block_nr >= ext2fs_blocks_count(fs->super)))
+	if ((gid_get_lid(*block_nr) < fs->super->s_first_data_block) ||
+	    (gid_get_lid(*block_nr) >= ext2fs_blocks_count(fs->super)))
 		return 0;	/* Ignore illegal blocks */
 
 	rb->err = ext2fs_badblocks_list_add(rb->bb_list, *block_nr);

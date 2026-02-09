@@ -188,7 +188,7 @@ int ext2fs_test_generic_bitmap(ext2fs_generic_bitmap bitmap,
 		}
 #ifndef OMIT_COM_ERR
 		com_err(0, EXT2_ET_MAGIC_GENERIC_BITMAP,
-			"test_bitmap(%lu)", (unsigned long) bitno);
+			"test_bitmap(%lu)", (unsigned long) gid_get_lid(bitno));
 #endif
 		return 0;
 	}
@@ -212,7 +212,7 @@ int ext2fs_mark_generic_bitmap(ext2fs_generic_bitmap bitmap,
 		}
 #ifndef OMIT_COM_ERR
 		com_err(0, EXT2_ET_MAGIC_GENERIC_BITMAP,
-			"mark_bitmap(%lu)", (unsigned long) bitno);
+			"mark_bitmap(%lu)", (unsigned long) gid_get_lid(bitno));
 #endif
 		return 0;
 	}
@@ -586,6 +586,7 @@ errcode_t ext2fs_find_first_set_generic_bitmap(ext2fs_generic_bitmap gen_bitmap,
 int ext2fs_test_block_bitmap_range(ext2fs_block_bitmap gen_bitmap,
 				   blk_t block, int num)
 {
+	block = gid_get_lid(block);
 	ext2fs_generic_bitmap_32 bitmap = (ext2fs_generic_bitmap_32) gen_bitmap;
 
 	EXT2_CHECK_MAGIC(bitmap, EXT2_ET_MAGIC_BLOCK_BITMAP);
@@ -618,6 +619,7 @@ int ext2fs_test_inode_bitmap_range(ext2fs_inode_bitmap gen_bitmap,
 void ext2fs_mark_block_bitmap_range(ext2fs_block_bitmap gen_bitmap,
 				    blk_t block, int num)
 {
+	block = gid_get_lid(block);
 	ext2fs_generic_bitmap_32 bitmap = (ext2fs_generic_bitmap_32) gen_bitmap;
 	int	i;
 
@@ -625,6 +627,7 @@ void ext2fs_mark_block_bitmap_range(ext2fs_block_bitmap gen_bitmap,
 	    (block+num-1 > bitmap->end)) {
 		ext2fs_warn_bitmap(EXT2_ET_BAD_BLOCK_MARK, block,
 				   bitmap->description);
+		ECFS_OUTPUT("reach here? fff");
 		return;
 	}
 	for (i=0; i < num; i++)

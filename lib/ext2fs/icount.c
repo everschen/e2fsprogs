@@ -342,6 +342,8 @@ static struct ext2_icount_el *insert_icount_el(ext2_icount_t icount,
 	ext2_ino_t		new_size = 0;
 	int			num;
 
+	ino = gid_get_lid(ino);
+
 	if (icount->last_lookup && icount->last_lookup->ino == ino)
 		return icount->last_lookup;
 
@@ -389,6 +391,7 @@ static struct ext2_icount_el *get_icount_el(ext2_icount_t icount,
 					    ext2_ino_t ino, int create)
 {
 	int	low, high, mid;
+	ino = gid_get_lid(ino);
 
 	if (!icount || !icount->list)
 		return 0;
@@ -433,6 +436,9 @@ static errcode_t set_inode_count(ext2_icount_t icount, ext2_ino_t ino,
 				 __u32 count)
 {
 	struct ext2_icount_el 	*el;
+
+	ino = gid_get_lid(ino);
+
 #ifdef CONFIG_TDB
 	TDB_DATA key, data;
 
@@ -470,6 +476,7 @@ static errcode_t get_inode_count(ext2_icount_t icount, ext2_ino_t ino,
 				 __u32 *count)
 {
 	struct ext2_icount_el 	*el;
+	ino = gid_get_lid(ino);
 #ifdef CONFIG_TDB
 	TDB_DATA key, data;
 
@@ -530,6 +537,7 @@ errcode_t ext2fs_icount_fetch(ext2_icount_t icount, ext2_ino_t ino, __u16 *ret)
 {
 	__u32	val;
 	EXT2_CHECK_MAGIC(icount, EXT2_ET_MAGIC_ICOUNT);
+	ino = gid_get_lid(ino);
 
 	if (!ino || (ino > icount->num_inodes))
 		return EXT2_ET_INVALID_ARGUMENT;
@@ -554,6 +562,7 @@ errcode_t ext2fs_icount_increment(ext2_icount_t icount, ext2_ino_t ino,
 				  __u16 *ret)
 {
 	__u32			curr_value;
+	ino = gid_get_lid(ino);
 
 	EXT2_CHECK_MAGIC(icount, EXT2_ET_MAGIC_ICOUNT);
 
@@ -614,6 +623,7 @@ errcode_t ext2fs_icount_decrement(ext2_icount_t icount, ext2_ino_t ino,
 				  __u16 *ret)
 {
 	__u32			curr_value;
+	ino = gid_get_lid(ino);
 
 	if (!ino || (ino > icount->num_inodes))
 		return EXT2_ET_INVALID_ARGUMENT;
@@ -666,6 +676,7 @@ errcode_t ext2fs_icount_decrement(ext2_icount_t icount, ext2_ino_t ino,
 errcode_t ext2fs_icount_store(ext2_icount_t icount, ext2_ino_t ino,
 			      __u16 count)
 {
+	ino = gid_get_lid(ino);
 	if (!ino || (ino > icount->num_inodes))
 		return EXT2_ET_INVALID_ARGUMENT;
 

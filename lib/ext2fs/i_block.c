@@ -31,6 +31,7 @@ errcode_t ext2fs_iblk_add_blocks(ext2_filsys fs, struct ext2_inode *inode,
 				 blk64_t num_blocks)
 {
 	unsigned long long b = inode->i_blocks;
+	num_blocks = gid_get_lid(num_blocks);
 
 	if (ext2fs_has_feature_huge_file(fs->super))
 		b += ((long long) inode->osd2.linux2.l_i_blocks_hi) << 32;
@@ -54,6 +55,7 @@ errcode_t ext2fs_iblk_sub_blocks(ext2_filsys fs, struct ext2_inode *inode,
 				 blk64_t num_blocks)
 {
 	unsigned long long b = inode->i_blocks;
+	num_blocks = gid_get_lid(num_blocks);
 
 	if (ext2fs_has_feature_huge_file(fs->super))
 		b += ((long long) inode->osd2.linux2.l_i_blocks_hi) << 32;
@@ -76,6 +78,7 @@ errcode_t ext2fs_iblk_sub_blocks(ext2_filsys fs, struct ext2_inode *inode,
 
 errcode_t ext2fs_iblk_set(ext2_filsys fs, struct ext2_inode *inode, blk64_t b)
 {
+	b = gid_get_lid(b);
 	if (!ext2fs_has_feature_huge_file(fs->super) ||
 	    !(inode->i_flags & EXT4_HUGE_FILE_FL))
 		b *= fs->blocksize / 512;

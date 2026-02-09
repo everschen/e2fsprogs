@@ -19,6 +19,7 @@
 #include "ext2fs.h"
 #include "crc16.h"
 #include <assert.h>
+#include <ctype.h>
 
 #ifndef offsetof
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
@@ -271,7 +272,7 @@ static errcode_t __get_dirent_tail(ext2_filsys fs,
 
 	while ((void *) d < top) {
 		rec_len = translate(d->rec_len);
-		if ((rec_len < 8) || (rec_len & 0x03))
+		if ((rec_len < 12) || (rec_len & 0x03))
 			return EXT2_ET_DIR_CORRUPTED;
 		d = (struct ext2_dir_entry *)(((char *)d) + rec_len);
 	}
@@ -304,17 +305,18 @@ static errcode_t ext2fs_dirent_csum(ext2_filsys fs, ext2_ino_t inum,
 {
 	errcode_t retval;
 	char *buf = (char *)dirent;
-	__u32 gen;
+	__u32 gen, l_inum;
 	struct ext2_inode inode;
 
 	retval = ext2fs_read_inode(fs, inum, &inode);
 	if (retval)
 		return retval;
 
-	inum = ext2fs_cpu_to_le32(inum);
+	l_inum = gid_get_lid(inum);
+	l_inum = ext2fs_cpu_to_le32(l_inum);
 	gen = ext2fs_cpu_to_le32(inode.i_generation);
-	*crc = ext2fs_crc32c_le(fs->csum_seed, (unsigned char *)&inum,
-				sizeof(inum));
+	*crc = ext2fs_crc32c_le(fs->csum_seed, (unsigned char *)&l_inum,
+				sizeof(l_inum));
 	*crc = ext2fs_crc32c_le(*crc, (unsigned char *)&gen, sizeof(gen));
 	*crc = ext2fs_crc32c_le(*crc, (unsigned char *)buf, size);
 
@@ -370,7 +372,7 @@ errcode_t ext2fs_dx_csum(ext2_filsys fs, ext2_ino_t inum,
 	errcode_t retval;
 	char *buf = (char *)dirent;
 	int size;
-	__u32 gen, dummy_csum = 0;
+	__u32 gen, dummy_csum = 0, l_inum;
 	struct ext2_inode inode;
 	struct ext2_dx_tail *t;
 	struct ext2_dx_countlimit *c;
@@ -393,10 +395,11 @@ errcode_t ext2fs_dx_csum(ext2_filsys fs, ext2_ino_t inum,
 	if (retval)
 		return retval;
 
-	inum = ext2fs_cpu_to_le32(inum);
+	l_inum = gid_get_lid(inum);
+	l_inum = ext2fs_cpu_to_le32(l_inum);
 	gen = ext2fs_cpu_to_le32(inode.i_generation);
-	*crc = ext2fs_crc32c_le(fs->csum_seed, (unsigned char *)&inum,
-				sizeof(inum));
+	*crc = ext2fs_crc32c_le(fs->csum_seed, (unsigned char *)&l_inum,
+				sizeof(l_inum));
 	*crc = ext2fs_crc32c_le(*crc, (unsigned char *)&gen, sizeof(gen));
 	*crc = ext2fs_crc32c_le(*crc, (unsigned char *)buf, size);
 	*crc = ext2fs_crc32c_le(*crc, (unsigned char *)t, 4);
@@ -479,7 +482,7 @@ static errcode_t ext2fs_extent_block_csum(ext2_filsys fs, ext2_ino_t inum,
 					  __u32 *crc)
 {
 	int size;
-	__u32 gen;
+	__u32 gen, l_inum;
 	errcode_t retval;
 	struct ext2_inode inode;
 
@@ -489,10 +492,12 @@ static errcode_t ext2fs_extent_block_csum(ext2_filsys fs, ext2_ino_t inum,
 	retval = ext2fs_read_inode(fs, inum, &inode);
 	if (retval)
 		return retval;
-	inum = ext2fs_cpu_to_le32(inum);
+
+	l_inum = gid_get_lid(inum);
+	l_inum = ext2fs_cpu_to_le32(l_inum);
 	gen = ext2fs_cpu_to_le32(inode.i_generation);
-	*crc = ext2fs_crc32c_le(fs->csum_seed, (unsigned char *)&inum,
-				sizeof(inum));
+	*crc = ext2fs_crc32c_le(fs->csum_seed, (unsigned char *)&l_inum,
+				sizeof(l_inum));
 	*crc = ext2fs_crc32c_le(*crc, (unsigned char *)&gen, sizeof(gen));
 	*crc = ext2fs_crc32c_le(*crc, (unsigned char *)eh, size);
 
@@ -623,10 +628,13 @@ static errcode_t ext2fs_inode_csum(ext2_filsys fs, ext2_ino_t inum,
 			       __u32 *crc, int has_hi)
 {
 	__u32 gen;
+	__u32 l_inum;
+	__u32 crc1,crc2;
 	struct ext2_inode_large *desc = inode;
 	size_t size = EXT2_INODE_SIZE(fs->super);
 	__u16 old_lo;
 	__u16 old_hi = 0;
+	
 
 	old_lo = inode->i_checksum_lo;
 	inode->i_checksum_lo = 0;
@@ -635,16 +643,32 @@ static errcode_t ext2fs_inode_csum(ext2_filsys fs, ext2_ino_t inum,
 		inode->i_checksum_hi = 0;
 	}
 
-	inum = ext2fs_cpu_to_le32(inum);
+	l_inum = gid_get_lid(inum);
+	l_inum = ext2fs_cpu_to_le32(l_inum);
 	gen = inode->i_generation;
-	*crc = ext2fs_crc32c_le(fs->csum_seed, (unsigned char *)&inum,
-				sizeof(inum));
-	*crc = ext2fs_crc32c_le(*crc, (unsigned char *)&gen, sizeof(gen));
-	*crc = ext2fs_crc32c_le(*crc, (unsigned char *)desc, size);
+	crc1 = ext2fs_crc32c_le(fs->csum_seed, (unsigned char *)&l_inum,
+				sizeof(l_inum));
+	crc2 = ext2fs_crc32c_le(crc1, (unsigned char *)&gen, sizeof(gen));
+	*crc = ext2fs_crc32c_le(crc2, (unsigned char *)desc, size);
+
+	FILE *fp = fopen("/tmp/fs_debug.log", "a");
+	if (fp && l_inum==8) {
+		fprintf(fp, "fs->csum_seed=%x, l_inum=%llu crc1=%x gen=%x crc2=%x crc3=%x\n",
+				fs->csum_seed, l_inum, crc1, gen, crc2, *crc);
+		fprint_hex_dump(fp,
+                "dump: ",
+                desc,
+                256,
+                16,   /* rowsize */
+                1);   /* groupsize */
+		fclose(fp);		
+	}
 
 	inode->i_checksum_lo = old_lo;
 	if (has_hi)
 		inode->i_checksum_hi = old_hi;
+	
+	
 	return 0;
 }
 
@@ -664,8 +688,11 @@ int ext2fs_inode_csum_verify(ext2_filsys fs, ext2_ino_t inum,
 
 	provided = ext2fs_le16_to_cpu(inode->i_checksum_lo);
 	retval = ext2fs_inode_csum(fs, inum, inode, &calculated, has_hi);
-	if (retval)
+	if (retval){
+		ECFS_OUTPUT("error here?");
 		return 0;
+	}
+		
 	if (has_hi) {
 		__u32 hi = ext2fs_le16_to_cpu(inode->i_checksum_hi);
 		provided |= hi << 16;
@@ -683,11 +710,17 @@ int ext2fs_inode_csum_verify(ext2_filsys fs, ext2_ino_t inum,
 	 * worth the bother to figure out how much of the extended
 	 * inode, if any, is present.)
 	 */
+
+	
 	for (cp = (char *) inode, i = 0;
 	     i < sizeof(struct ext2_inode);
 	     cp++, i++)
-		if (*cp)
+		if (*cp){
+			ECFS_OUTPUT("error here? provided=%x, calculated=%x", provided, calculated);
+			ECFS_OUTPUT("error here? i=%d", i);
 			return 0;
+		}
+			
 	return 1;		/* Inode must have been all zero's */
 }
 

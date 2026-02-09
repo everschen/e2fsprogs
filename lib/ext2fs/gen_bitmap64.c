@@ -100,6 +100,9 @@ errcode_t ext2fs_alloc_generic_bmap(ext2_filsys fs, errcode_t magic,
 	ext2_ino_t num_dirs;
 	errcode_t retval;
 
+	start = gid_get_lid(start);
+	end = gid_get_lid(end);
+	real_end = gid_get_lid(real_end);
 	if (!type)
 		type = EXT2FS_BMAP64_BITARRAY;
 
@@ -348,6 +351,8 @@ errcode_t ext2fs_resize_generic_bmap(ext2fs_generic_bitmap gen_bmap,
 				     __u64 new_end,
 				     __u64 new_real_end)
 {
+	new_end = gid_get_lid(new_end);
+	new_real_end = gid_get_lid(new_real_end);
 	ext2fs_generic_bitmap_64 bmap = (ext2fs_generic_bitmap_64) gen_bmap;
 
 	if (!bmap)
@@ -369,6 +374,7 @@ errcode_t ext2fs_fudge_generic_bmap_end(ext2fs_generic_bitmap gen_bitmap,
 					errcode_t neq,
 					__u64 end, __u64 *oend)
 {
+	end = gid_get_lid(end);
 	ext2fs_generic_bitmap_64 bitmap = (ext2fs_generic_bitmap_64) gen_bitmap;
 
 	if (!bitmap)
@@ -442,6 +448,7 @@ void ext2fs_clear_generic_bmap(ext2fs_generic_bitmap gen_bitmap)
 int ext2fs_mark_generic_bmap(ext2fs_generic_bitmap gen_bitmap,
 			     __u64 arg)
 {
+	arg = gid_get_lid(arg);
 	ext2fs_generic_bitmap_64 bitmap = (ext2fs_generic_bitmap_64) gen_bitmap;
 
 	if (!bitmap)
@@ -481,6 +488,7 @@ int ext2fs_mark_generic_bmap(ext2fs_generic_bitmap gen_bitmap,
 int ext2fs_unmark_generic_bmap(ext2fs_generic_bitmap gen_bitmap,
 			       __u64 arg)
 {
+	arg = gid_get_lid(arg);
 	ext2fs_generic_bitmap_64 bitmap = (ext2fs_generic_bitmap_64) gen_bitmap;
 
 	if (!bitmap)
@@ -513,6 +521,7 @@ int ext2fs_unmark_generic_bmap(ext2fs_generic_bitmap gen_bitmap,
 int ext2fs_test_generic_bmap(ext2fs_generic_bitmap gen_bitmap,
 			     __u64 arg)
 {
+	arg = gid_get_lid(arg);
 	ext2fs_generic_bitmap_64 bitmap = (ext2fs_generic_bitmap_64) gen_bitmap;
 	if (!bitmap)
 		return 0;
@@ -552,6 +561,7 @@ errcode_t ext2fs_set_generic_bmap_range(ext2fs_generic_bitmap gen_bmap,
 					__u64 start, unsigned int num,
 					void *in)
 {
+	start = gid_get_lid(start);
 	ext2fs_generic_bitmap_64 bmap = (ext2fs_generic_bitmap_64) gen_bmap;
 
 	if (!bmap)
@@ -579,6 +589,7 @@ errcode_t ext2fs_get_generic_bmap_range(ext2fs_generic_bitmap gen_bmap,
 					__u64 start, unsigned int num,
 					void *out)
 {
+	start = gid_get_lid(start);
 	ext2fs_generic_bitmap_64 bmap = (ext2fs_generic_bitmap_64) gen_bmap;
 
 	if (!bmap)
@@ -658,6 +669,7 @@ void ext2fs_set_generic_bmap_padding(ext2fs_generic_bitmap gen_bmap)
 int ext2fs_test_block_bitmap_range2(ext2fs_block_bitmap gen_bmap,
 				    blk64_t block, unsigned int num)
 {
+	block = gid_get_lid(block);
 	ext2fs_generic_bitmap_64 bmap = (ext2fs_generic_bitmap_64) gen_bmap;
 	__u64	end = block + num;
 
@@ -703,6 +715,7 @@ int ext2fs_test_block_bitmap_range2(ext2fs_block_bitmap gen_bmap,
 void ext2fs_mark_block_bitmap_range2(ext2fs_block_bitmap gen_bmap,
 				     blk64_t block, unsigned int num)
 {
+	block = gid_get_lid(block);
 	ext2fs_generic_bitmap_64 bmap = (ext2fs_generic_bitmap_64) gen_bmap;
 	__u64	end = block + num;
 
@@ -735,6 +748,7 @@ void ext2fs_mark_block_bitmap_range2(ext2fs_block_bitmap gen_bmap,
 	    (block+num-1 > bmap->end)) {
 		ext2fs_warn_bitmap(EXT2_ET_BAD_BLOCK_MARK, block,
 				   bmap->description);
+		ECFS_OUTPUT("reach here? ddd");
 		return;
 	}
 
@@ -744,6 +758,7 @@ void ext2fs_mark_block_bitmap_range2(ext2fs_block_bitmap gen_bmap,
 void ext2fs_unmark_block_bitmap_range2(ext2fs_block_bitmap gen_bmap,
 				       blk64_t block, unsigned int num)
 {
+	block = gid_get_lid(block);
 	ext2fs_generic_bitmap_64 bmap = (ext2fs_generic_bitmap_64) gen_bmap;
 	__u64	end = block + num;
 
@@ -842,6 +857,8 @@ errcode_t ext2fs_find_first_zero_generic_bmap(ext2fs_generic_bitmap bitmap,
 	__u64 cstart, cend, cout;
 	errcode_t retval;
 
+	start = gid_get_lid(start);
+	end = gid_get_lid(end);
 	if (!bitmap)
 		return EINVAL;
 
@@ -897,6 +914,8 @@ errcode_t ext2fs_find_first_set_generic_bmap(ext2fs_generic_bitmap bitmap,
 	__u64 cstart, cend, cout;
 	errcode_t retval;
 
+	start = gid_get_lid(start);
+	end = gid_get_lid(end);
 	if (!bitmap)
 		return EINVAL;
 
@@ -952,6 +971,8 @@ errcode_t ext2fs_count_used_blocks(ext2_filsys fs, blk64_t start,
 	blk64_t		tot_set = 0;
 	errcode_t	retval = 0;
 
+	start = gid_get_lid(start);
+	end = gid_get_lid(end);
 	while (start < end) {
 		retval = ext2fs_find_first_set_block_bitmap2(fs->block_map,
 							start, end, &next);
@@ -985,6 +1006,9 @@ errcode_t ext2fs_count_used_clusters(ext2_filsys fs, blk64_t start,
 {
 	blk64_t		tot_set = 0;
 	errcode_t	retval = 0;
+
+	start = gid_get_lid(start);
+	end = gid_get_lid(end);
 
 	retval = ext2fs_count_used_blocks(fs, start, end, &tot_set);
 

@@ -3481,6 +3481,7 @@ static void check_blocks(e2fsck_t ctx, struct problem_context *pctx,
 	pb.ino = ino;
 	pb.num_blocks = EXT2FS_B2C(ctx->fs,
 				   ea_ibody_quota ? ea_ibody_quota->blocks : 0);
+
 	pb.last_block = ~0;
 	pb.last_init_lblock = -1;
 	pb.last_db_block = -1;
@@ -3510,10 +3511,14 @@ static void check_blocks(e2fsck_t ctx, struct problem_context *pctx,
 	}
 
 	if (inlinedata_fs && (inode->i_flags & EXT4_INLINE_DATA_FL))
+	{
 		check_blocks_inline_data(ctx, pctx, &pb);
+	}
 	else if (ext2fs_inode_has_valid_blocks2(fs, inode)) {
 		if (extent_fs && (inode->i_flags & EXT4_EXTENTS_FL))
+		{
 			check_blocks_extents(ctx, pctx, &pb);
+		}			
 		else {
 			int flags;
 			/*
@@ -3610,9 +3615,12 @@ static void check_blocks(e2fsck_t ctx, struct problem_context *pctx,
 
 	if (!ext2fs_has_feature_huge_file(fs->super) ||
 	    !(inode->i_flags & EXT4_HUGE_FILE_FL))
-		pb.num_blocks *= (fs->blocksize / 512);
+		{
+			pb.num_blocks *= (fs->blocksize / 512);
+		}
+		
 	pb.num_blocks *= EXT2FS_CLUSTER_RATIO(fs);
-#if 0
+#if 1
 	printf("inode %u, i_size = %u, last_block = %llu, i_blocks=%llu, num_blocks = %llu\n",
 	       ino, inode->i_size, (unsigned long long) pb.last_block,
 	       (unsigned long long) ext2fs_inode_i_blocks(fs, inode),

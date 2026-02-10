@@ -72,6 +72,7 @@ OBJS= $(DEBUGFS_LIB_OBJS) $(RESIZE_LIB_OBJS) $(E2IMAGE_LIB_OBJS) \
 	blkmap64_rb.o \
 	blknum.o \
 	block.o \
+	debug.o \
 	bmap.o \
 	check_desc.o \
 	closefs.o \
@@ -153,6 +154,7 @@ SRCS= ext2_err.c \
 	$(srcdir)/blkmap64_ba.c \
 	$(srcdir)/blkmap64_rb.c \
 	$(srcdir)/block.c \
+	$(srcdir)/debug.c \
 	$(srcdir)/bmap.c \
 	$(srcdir)/check_desc.c \
 	$(srcdir)/closefs.c \
@@ -748,6 +750,12 @@ blkmap64_rb.o: $(srcdir)/blkmap64_rb.c $(top_builddir)/lib/config.h \
  $(srcdir)/hashmap.h $(srcdir)/bitops.h $(srcdir)/bmap64.h $(srcdir)/rbtree.h \
  $(srcdir)/compiler.h
 block.o: $(srcdir)/block.c $(top_builddir)/lib/config.h \
+ $(top_builddir)/lib/dirpaths.h $(srcdir)/ext2_fs.h \
+ $(top_builddir)/lib/ext2fs/ext2_types.h $(srcdir)/ext2fs.h \
+ $(srcdir)/ext2_fs.h $(srcdir)/ext3_extents.h $(top_srcdir)/lib/et/com_err.h \
+ $(srcdir)/ext2_io.h $(top_builddir)/lib/ext2fs/ext2_err.h \
+ $(srcdir)/ext2_ext_attr.h $(srcdir)/hashmap.h $(srcdir)/bitops.h
+debug.o: $(srcdir)/debug.c $(top_builddir)/lib/config.h \
  $(top_builddir)/lib/dirpaths.h $(srcdir)/ext2_fs.h \
  $(top_builddir)/lib/ext2fs/ext2_types.h $(srcdir)/ext2fs.h \
  $(srcdir)/ext2_fs.h $(srcdir)/ext3_extents.h $(top_srcdir)/lib/et/com_err.h \

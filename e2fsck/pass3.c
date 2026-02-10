@@ -319,15 +319,18 @@ static int check_directory(e2fsck_t ctx, ext2_ino_t dir,
 		 * seen the parent once already, then offer to
 		 * reparent it to lost+found
 		 */
+		ECFS_OUTPUT("error here? ino=%llx parent=%llx", ino, parent);
 		if (!parent ||
 		    (loop_pass &&
 		     ext2fs_test_inode_bitmap2(inode_loop_detect, parent))) {
 			pctx->ino = ino;
+			ECFS_OUTPUT("error here? ino=%llx parent=%llx", ino, parent);
 			if (parent)
 				pctx->dir = parent;
 			else
 				(void) ext2fs_lookup(fs, ino, "..", 2, NULL,
 						     &pctx->dir);
+			ECFS_OUTPUT("error here? ino=%llx parent=%llx", ino, parent);
 			if (fix_problem(ctx, !parent ? PR_3_UNCONNECTED_DIR :
 						       PR_3_LOOPED_DIR, pctx)) {
 				if (e2fsck_reconnect_file(ctx, pctx->ino)) {

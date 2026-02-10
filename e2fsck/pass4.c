@@ -220,7 +220,9 @@ void e2fsck_pass4(e2fsck_t ctx)
 		     ext2fs_test_inode_bitmap2(ctx->inode_bb_map, i)))
 			continue;
 		ext2fs_icount_fetch(ctx->inode_link_info, i, &link_count);
+
 		ext2fs_icount_fetch(ctx->inode_count, i, &link_counted);
+		ECFS_OUTPUT("reach here? evers link_count=%d pctx.ino=%d i=%d link_counted=%d", link_count, pctx.ino, i, link_counted);
 
 		if (ctx->ea_inode_refs) {
 			ea_refcount_fetch(ctx->ea_inode_refs, i, &ea_refs);
@@ -260,6 +262,7 @@ void e2fsck_pass4(e2fsck_t ctx)
 			}
 			link_counted = 1;
 		}
+		ECFS_OUTPUT("reach here? evers link_counted=%d link_count=%d", link_counted, link_count);
 		if (link_counted != link_count) {
 			int fix_nlink = 0;
 

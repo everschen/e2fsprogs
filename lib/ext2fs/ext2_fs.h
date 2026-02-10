@@ -18,6 +18,8 @@
 
 #include <ext2fs/ext2_types.h>		/* Changed from linux/types.h */
 
+#include <stdio.h>
+
 #ifndef __GNUC_PREREQ
 #if defined(__GNUC__) && defined(__GNUC_MINOR__)
 #define __GNUC_PREREQ(maj, min) \
@@ -1111,6 +1113,13 @@ struct ext2_dir_entry_tail {
 #define EXT2_DIR_ROUND			(EXT2_DIR_PAD - 1)
 #define EXT2_DIR_REC_LEN(name_len) ext2fs_dir_rec_len(name_len, 0)
 
+#define ECFS_OUTPUT(...) \
+    do { \
+        fprintf(stderr, "EXT4 e2fs debug %s:%d: ", __FUNCTION__, __LINE__); \
+        fprintf(stderr, __VA_ARGS__); \
+        fprintf(stderr, "\n\n"); \
+    } while(0)
+
 static inline unsigned int ext2fs_dir_rec_len(__u8 name_len,
 						int extended)
 {
@@ -1201,5 +1210,15 @@ struct mmp_struct {
 #define EXT4_ENC_UTF8_12_1	1
 
 #define EXT4_ENC_STRICT_MODE_FL			(1 << 0) /* Reject invalid sequences */
+
+void fprint_hex_dump(FILE *fp,
+                     const char *prefix,
+                     const void *buf,
+                     size_t len,
+                     size_t rowsize,   /* 一行多少字节，内核常用 16 */
+                     size_t groupsize);
+
+void dump_stack_user(void);
+
 
 #endif	/* _LINUX_EXT2_FS_H */

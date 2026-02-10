@@ -16,6 +16,8 @@
 #include "ext2fs/ext2fs.h"
 #include <ext2fs/tdb.h>
 
+#include <execinfo.h>
+
 struct dir_info_db {
 	ext2_ino_t	count;
 	ext2_ino_t	size;
@@ -195,6 +197,7 @@ void e2fsck_add_dir_info(e2fsck_t ctx, ext2_ino_t ino, ext2_ino_t parent)
 	dir->ino = ino;
 	dir->dotdot = parent;
 	dir->parent = parent;
+	ECFS_OUTPUT("error here? dir->ino=%llx parent=%llx", ino, parent);
 }
 
 /*
@@ -310,6 +313,7 @@ static void e2fsck_put_dir_info(e2fsck_t ctx EXT2FS_NO_TDB_UNUSED,
 	key.dsize = sizeof(ext2_ino_t);
 	data.dptr = (unsigned char *) &buf;
 	data.dsize = sizeof(buf);
+	ECFS_OUTPUT("error here? dir->ino=%llx dir->parent=%llx", dir->ino, dir->parent);
 
 	if (tdb_store(db->tdb, key, data, TDB_REPLACE) == -1) {
 		printf("store failed: %s\n", tdb_errorstr(db->tdb));
@@ -434,6 +438,7 @@ int e2fsck_dir_info_set_parent(e2fsck_t ctx, ext2_ino_t ino,
 	if (!p)
 		return 1;
 	p->parent = parent;
+	ECFS_OUTPUT("error here? ino=%llx parent=%llx", ino, parent);
 	e2fsck_put_dir_info(ctx, p);
 	return 0;
 }

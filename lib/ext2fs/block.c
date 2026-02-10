@@ -9,6 +9,9 @@
  * %End-Header%
  */
 
+#include "../../e2fsck/e2fsck.h"
+#include <ctype.h>
+
 #include "config.h"
 #include <stdio.h>
 #include <string.h>
@@ -18,6 +21,26 @@
 
 #include "ext2_fs.h"
 #include "ext2fs.h"
+
+struct process_block_struct {
+	ext2_ino_t	ino;
+	unsigned	is_dir:1, is_reg:1, clear:1, suppress:1,
+				fragmented:1, compressed:1, bbcheck:1,
+				inode_modified:1;
+	blk64_t		num_blocks;
+	blk64_t		max_blocks;
+	blk64_t		last_block;
+	e2_blkcnt_t	last_init_lblock;
+	e2_blkcnt_t	last_db_block;
+	int		num_illegal_blocks;
+	blk64_t		previous_block;
+	struct ext2_inode *inode;
+	struct problem_context *pctx;
+	ext2fs_block_bitmap fs_meta_blocks;
+	e2fsck_t	ctx;
+	blk64_t		next_lblock;
+	struct extent_tree_info	eti;
+};
 
 struct block_context {
 	ext2_filsys	fs;
@@ -153,6 +176,7 @@ static int block_iterate_dind(blk_t *dind_block, blk_t ref_block,
 	int	i, flags, limit, offset;
 	blk_t	*block_nr;
 	blk64_t	blk64;
+	FILE *fp = fopen("/tmp/fs_debug_ext4.log", "a");
 
 	limit = ctx->fs->blocksize >> 2;
 	if (!(ctx->flags & (BLOCK_FLAG_DEPTH_TRAVERSE |
@@ -163,26 +187,32 @@ static int block_iterate_dind(blk_t *dind_block, blk_t ref_block,
 				   ref_offset, ctx->priv_data);
 		*dind_block = blk64;
 	}
+
 	check_for_ro_violation_return(ctx, ret);
 	if (!*dind_block || (ret & BLOCK_ABORT)) {
 		ctx->bcount += limit*limit;
 		return ret;
 	}
+
 	if (*dind_block >= ext2fs_blocks_count(ctx->fs->super) ||
 	    *dind_block < ctx->fs->super->s_first_data_block) {
 		ctx->errcode = EXT2_ET_BAD_DIND_BLOCK;
 		ret |= BLOCK_ERROR;
 		return ret;
 	}
+
 	ctx->errcode = ext2fs_read_ind_block(ctx->fs, *dind_block,
 					     ctx->dind_buf);
 	if (ctx->errcode) {
 		ret |= BLOCK_ERROR;
 		return ret;
 	}
+	
 
 	block_nr = (blk_t *) ctx->dind_buf;
+
 	offset = 0;
+
 	if (ctx->flags & BLOCK_FLAG_APPEND) {
 		for (i = 0; i < limit; i++, block_nr++) {
 			flags = block_iterate_ind(block_nr,
@@ -212,6 +242,7 @@ static int block_iterate_dind(blk_t *dind_block, blk_t ref_block,
 			offset += sizeof(blk_t);
 		}
 	}
+
 	check_for_ro_violation_return(ctx, changed);
 	if (changed & BLOCK_CHANGED) {
 		ctx->errcode = ext2fs_write_ind_block(ctx->fs, *dind_block,
@@ -474,7 +505,7 @@ errcode_t ext2fs_block_iterate3(ext2_filsys fs,
 			 */
 			retval = ext2fs_extent_get(handle, op, &next);
 
-#if 0
+#if 1
 			printf("lblk %llu pblk %llu len %d blockcnt %llu\n",
 			       extent.e_lblk, extent.e_pblk,
 			       extent.e_len, blockcnt);
@@ -530,6 +561,7 @@ errcode_t ext2fs_block_iterate3(ext2_filsys fs,
 				goto abort_exit;
 		}
 	}
+
 	check_for_ro_violation_goto(&ctx, ret, abort_exit);
 	if (inode.i_block[EXT2_IND_BLOCK] || (flags & BLOCK_FLAG_APPEND)) {
 		ret |= block_iterate_ind(&inode.i_block[EXT2_IND_BLOCK], 
@@ -538,19 +570,24 @@ errcode_t ext2fs_block_iterate3(ext2_filsys fs,
 			goto abort_exit;
 	} else
 		ctx.bcount += limit;
+
 	if (inode.i_block[EXT2_DIND_BLOCK] || (flags & BLOCK_FLAG_APPEND)) {
+		ECFS_OUTPUT("error here? ctx.bcount=%d", ctx.bcount);
 		ret |= block_iterate_dind(&inode.i_block[EXT2_DIND_BLOCK],
 					  0, EXT2_DIND_BLOCK, &ctx);
+		ECFS_OUTPUT("error here? ctx.bcount=%d", ctx.bcount);
 		if (ret & BLOCK_ABORT)
 			goto abort_exit;
 	} else
 		ctx.bcount += limit * limit;
+
 	if (inode.i_block[EXT2_TIND_BLOCK] || (flags & BLOCK_FLAG_APPEND)) {
 		ret |= block_iterate_tind(&inode.i_block[EXT2_TIND_BLOCK],
 					  0, EXT2_TIND_BLOCK, &ctx);
 		if (ret & BLOCK_ABORT)
 			goto abort_exit;
 	}
+
 
 abort_exit:
 	if (ret & BLOCK_CHANGED) {

@@ -252,11 +252,11 @@ static inline ext2_ino_t quota_sb_inum(struct ext2_super_block *sb,
 {
 	switch (qtype) {
 	case USRQUOTA:
-		return make_fid_sb(sb, sb->s_usr_quota_inum);
+		return make_gid_sb(sb, sb->s_usr_quota_inum);
 	case GRPQUOTA:
-		return make_fid_sb(sb, sb->s_grp_quota_inum);
+		return make_gid_sb(sb, sb->s_grp_quota_inum);
 	case PRJQUOTA:
-		return make_fid_sb(sb, sb->s_prj_quota_inum);
+		return make_gid_sb(sb, sb->s_prj_quota_inum);
 	default:
 		return 0;
 	}

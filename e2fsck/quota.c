@@ -109,16 +109,16 @@ void e2fsck_validate_quota_inodes(e2fsck_t ctx)
 	for (qtype = 0; qtype < MAXQUOTAS; qtype++) {
 		pctx.ino = quota_sb_inum(sb, qtype);
 		pctx.num = qtype;
-		if (fid_get_ino(pctx.ino) &&
-		    ((fid_get_ino(pctx.ino) == EXT2_BAD_INO) ||
-		     (fid_get_ino(pctx.ino) == EXT2_ROOT_INO) ||
-		     (fid_get_ino(pctx.ino) == EXT2_BOOT_LOADER_INO) ||
-		     (fid_get_ino(pctx.ino) == EXT2_UNDEL_DIR_INO) ||
-		     (fid_get_ino(pctx.ino) == EXT2_RESIZE_INO) ||
-		     (fid_get_ino(pctx.ino) == EXT2_JOURNAL_INO) ||
-		     (fid_get_ino(pctx.ino) == EXT2_EXCLUDE_INO) ||
-		     (fid_get_ino(pctx.ino) == EXT4_REPLICA_INO) ||
-		     (fid_get_ino(pctx.ino) > fs->super->s_inodes_count)) &&
+		if (gid_get_lid(pctx.ino) &&
+		    ((gid_get_lid(pctx.ino) == EXT2_BAD_INO) ||
+		     (gid_get_lid(pctx.ino) == EXT2_ROOT_INO) ||
+		     (gid_get_lid(pctx.ino) == EXT2_BOOT_LOADER_INO) ||
+		     (gid_get_lid(pctx.ino) == EXT2_UNDEL_DIR_INO) ||
+		     (gid_get_lid(pctx.ino) == EXT2_RESIZE_INO) ||
+		     (gid_get_lid(pctx.ino) == EXT2_JOURNAL_INO) ||
+		     (gid_get_lid(pctx.ino) == EXT2_EXCLUDE_INO) ||
+		     (gid_get_lid(pctx.ino) == EXT4_REPLICA_INO) ||
+		     (gid_get_lid(pctx.ino) > fs->super->s_inodes_count)) &&
 		    fix_problem(ctx, PR_0_INVALID_QUOTA_INO, &pctx)) {
 			*quota_sb_inump(sb, qtype) = 0;
 			ext2fs_mark_super_dirty(fs);

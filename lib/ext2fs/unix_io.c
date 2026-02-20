@@ -249,6 +249,7 @@ static errcode_t raw_read_blk(io_channel channel,
 			return 0;
 		actual = 0;
 	}
+	ECFS_OUTPUT("error here? block=%d count=%d location=%d", block, count, location);
 #elif HAVE_PREAD
 	/* Try an aligned pread */
 	if ((sizeof(off_t) >= sizeof(ext2_loff_t)) &&
@@ -262,7 +263,7 @@ static errcode_t raw_read_blk(io_channel channel,
 		actual = 0;
 	}
 #endif /* HAVE_PREAD */
-
+	ECFS_OUTPUT("error here? block=%d count=%d", block, count);
 	if ((channel->align == 0) ||
 	    (IS_ALIGNED(buf, channel->align) &&
 	     IS_ALIGNED(location, channel->align) &&
@@ -270,6 +271,7 @@ static errcode_t raw_read_blk(io_channel channel,
 		mutex_lock(data, BOUNCE_MTX);
 		if (ext2fs_llseek(data->dev, location, SEEK_SET) < 0) {
 			retval = errno ? errno : EXT2_ET_LLSEEK_FAILED;
+			ECFS_OUTPUT("error here? block=%d count=%d retval=%d location=%d", block, count, retval, location);
 			goto error_unlock;
 		}
 		actual = read(data->dev, buf, size);
@@ -280,10 +282,12 @@ static errcode_t raw_read_blk(io_channel channel,
 				actual = 0;
 			} else
 				retval = EXT2_ET_SHORT_READ;
+			ECFS_OUTPUT("error here? block=%d count=%d", block, count);
 			goto error_unlock;
 		}
 		goto success_unlock;
 	}
+	ECFS_OUTPUT("error here? block=%d count=%d", block, count);
 
 #ifdef ALIGN_DEBUG
 	printf("raw_read_blk: O_DIRECT fallback: %p %lu\n", buf,
@@ -295,6 +299,7 @@ static errcode_t raw_read_blk(io_channel channel,
 	 * to the O_DIRECT rules, so we need to do this the hard way...
 	 */
 bounce_read:
+	ECFS_OUTPUT("error here? block=%d count=%d", block, count);
 	if (channel->align == 0)
 		channel->align = 1;
 	if ((channel->block_size > channel->align) &&
@@ -310,6 +315,7 @@ bounce_read:
 		retval = errno ? errno : EXT2_ET_LLSEEK_FAILED;
 		goto error_unlock;
 	}
+	ECFS_OUTPUT("error here? block=%d count=%d", block, count);
 	while (size > 0) {
 		actual = read(data->dev, data->bounce, align_size);
 		if (actual != align_size) {
@@ -330,11 +336,13 @@ bounce_read:
 		offset = 0;
 		aligned_blk++;
 	}
+	ECFS_OUTPUT("error here? block=%d count=%d", block, count);
 success_unlock:
 	mutex_unlock(data, BOUNCE_MTX);
 	return 0;
 
 error_unlock:
+	ECFS_OUTPUT("error here? block=%d count=%d", block, count);
 	mutex_unlock(data, BOUNCE_MTX);
 	if (actual >= 0 && actual < size)
 		memset((char *) buf+actual, 0, size-actual);
@@ -1217,6 +1225,7 @@ static errcode_t unix_read_blk64(io_channel channel, unsigned long long block,
 	 * If we're doing an odd-sized read or a very large read,
 	 * flush out the cache and then do a direct read.
 	 */
+
 	if (count < 0 || count > WRITE_DIRECT_SIZE) {
 		if ((retval = flush_cached_blocks(channel, data, 0)))
 			return retval;
@@ -1253,6 +1262,7 @@ static errcode_t unix_read_blk64(io_channel channel, unsigned long long block,
 			return retval;
 		mutex_lock(data, CACHE_MTX);
 
+
 		/* Save the results in the cache */
 		for (j=0; j < i; j++) {
 			if (!find_cached_block(data, block, &cache)) {
@@ -1265,6 +1275,7 @@ static errcode_t unix_read_blk64(io_channel channel, unsigned long long block,
 			count--;
 			block++;
 			cp += channel->block_size;
+
 		}
 	}
 	mutex_unlock(data, CACHE_MTX);
@@ -1278,6 +1289,8 @@ call_write_handler:
 		cache->dirty = 0;
 		cache->in_use = 0;
 		cache->write_err = 0;
+		ECFS_OUTPUT("error here? block=%d", block);
+
 		if (io_channel_alloc_buf(channel, 0, &err_buf))
 			err_buf = NULL;
 		else
@@ -1290,6 +1303,7 @@ call_write_handler:
 			ext2fs_free_mem(&err_buf);
 	} else
 		mutex_unlock(data, CACHE_MTX);
+	ECFS_OUTPUT("error here? block=%d", block);
 	return retval;
 #endif /* NO_IO_CACHE */
 }

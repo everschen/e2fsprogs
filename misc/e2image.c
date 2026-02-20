@@ -676,9 +676,9 @@ more_blocks:
 			}
 			fflush (stderr);
 		}
-		if ((blk >= fs->super->s_first_data_block) &&
-		    ext2fs_test_block_bitmap2(meta_block_map, blk)) {
-			retval = io_channel_read_blk64(fs->io, blk, 1, buf);
+		if ((gid_get_lid(blk) >= fs->super->s_first_data_block) &&
+		    ext2fs_test_block_bitmap2(meta_block_map, gid_get_lid(blk))) {
+			retval = io_channel_read_blk64(fs->io, gid_get_lid(blk), 1, buf);
 			if (retval) {
 				com_err(program_name, retval,
 					_("error reading block %llu"),
@@ -1209,9 +1209,9 @@ static void output_qcow2_meta_data_blocks(ext2_filsys fs, int fd)
 	}
 	/* Write qcow2 data blocks */
 	for (blk = 0; blk < ext2fs_blocks_count(fs->super); blk++) {
-		if ((blk >= fs->super->s_first_data_block) &&
-		    ext2fs_test_block_bitmap2(meta_block_map, blk)) {
-			retval = io_channel_read_blk64(fs->io, blk, 1, buf);
+		if ((gid_get_lid(blk) >= fs->super->s_first_data_block) &&
+		    ext2fs_test_block_bitmap2(meta_block_map, gid_get_lid(blk))) {
+			retval = io_channel_read_blk64(fs->io, gid_get_lid(blk), 1, buf);
 			if (retval) {
 				com_err(program_name, retval,
 					_("error reading block %llu"),

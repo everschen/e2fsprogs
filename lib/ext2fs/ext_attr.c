@@ -298,8 +298,8 @@ errcode_t ext2fs_adjust_ea_refcount3(ext2_filsys fs, blk64_t blk,
 	struct ext2_ext_attr_header *header;
 	char	*buf = 0;
 
-	if ((blk >= ext2fs_blocks_count(fs->super)) ||
-	    (blk < fs->super->s_first_data_block))
+	if ((gid_get_lid(blk) >= ext2fs_blocks_count(fs->super)) ||
+	    (gid_get_lid(blk) < fs->super->s_first_data_block))
 		return EXT2_ET_BAD_EA_BLOCK_NUM;
 
 	if (!block_buf) {
@@ -451,8 +451,8 @@ errcode_t ext2fs_free_ext_attr(ext2_filsys fs, ext2_ino_t ino,
 		return 0;
 
 	/* Find block, zero it, write back */
-	if ((blk < fs->super->s_first_data_block) ||
-	    (blk >= ext2fs_blocks_count(fs->super))) {
+	if ((gid_get_lid(blk) < fs->super->s_first_data_block) ||
+	    (gid_get_lid(blk) >= ext2fs_blocks_count(fs->super))) {
 		err = EXT2_ET_BAD_EA_BLOCK_NUM;
 		goto out;
 	}
@@ -509,9 +509,9 @@ static errcode_t prep_ea_block_for_write(ext2_filsys fs, ext2_ino_t ino,
 
 	/* Do we already have an EA block? */
 	blk = ext2fs_file_acl_block(fs, (struct ext2_inode *)inode);
-	if (blk != 0) {
-		if ((blk < fs->super->s_first_data_block) ||
-		    (blk >= ext2fs_blocks_count(fs->super))) {
+	if (gid_get_lid(blk) != 0) {
+		if ((gid_get_lid(blk) < fs->super->s_first_data_block) ||
+		    (gid_get_lid(blk) >= ext2fs_blocks_count(fs->super))) {
 			err = EXT2_ET_BAD_EA_BLOCK_NUM;
 			goto out;
 		}
@@ -1091,9 +1091,9 @@ errcode_t ext2fs_xattrs_read_inode(struct ext2_xattr_handle *handle,
 read_ea_block:
 	/* Look for EA in a separate EA block */
 	blk = ext2fs_file_acl_block(handle->fs, EXT2_INODE(inode));
-	if (blk != 0) {
-		if ((blk < handle->fs->super->s_first_data_block) ||
-		    (blk >= ext2fs_blocks_count(handle->fs->super))) {
+	if (gid_get_lid(blk) != 0) {
+		if ((gid_get_lid(blk) < handle->fs->super->s_first_data_block) ||
+		    (gid_get_lid(blk) >= ext2fs_blocks_count(handle->fs->super))) {
 			err = EXT2_ET_BAD_EA_BLOCK_NUM;
 			goto out;
 		}

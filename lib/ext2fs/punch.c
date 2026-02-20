@@ -208,8 +208,8 @@ static errcode_t punch_extent_blocks(ext2_filsys fs, ext2_ino_t ino,
 	__u32		cluster_freed;
 	errcode_t	retval = 0;
 
-	if (free_start < fs->super->s_first_data_block ||
-	    (free_start + free_count) > ext2fs_blocks_count(fs->super))
+	if (gid_get_lid(free_start) < fs->super->s_first_data_block ||
+	    (gid_get_lid(free_start) + free_count) > ext2fs_blocks_count(fs->super))
 		return EXT2_ET_BAD_BLOCK_NUM;
 
 	/* No bigalloc?  Just free each block. */

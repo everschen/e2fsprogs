@@ -48,11 +48,12 @@ __u32 ext2fs_do_orphan_file_block_csum(ext2_filsys fs, ext2_ino_t ino,
 	int inodes_per_ob = ext2fs_inodes_per_orphan_block(fs);
 	__u32 crc;
 
-	ino = ext2fs_cpu_to_le32(ino);
+	__u32 inum = gid_get_lid(ino);
+	inum = ext2fs_cpu_to_le32(inum);
 	gen = ext2fs_cpu_to_le32(gen);
 	blk = ext2fs_cpu_to_le64(blk);
-	crc = ext2fs_crc32c_le(fs->csum_seed, (unsigned char *)&ino,
-			       sizeof(ino));
+	crc = ext2fs_crc32c_le(fs->csum_seed, (unsigned char *)&inum,
+			       sizeof(inum));
 	crc = ext2fs_crc32c_le(crc, (unsigned char *)&gen, sizeof(gen));
 	crc = ext2fs_crc32c_le(crc, (unsigned char *)&blk, sizeof(blk));
 	crc = ext2fs_crc32c_le(crc, (unsigned char *)buf,

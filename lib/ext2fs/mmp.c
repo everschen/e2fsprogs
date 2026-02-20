@@ -47,8 +47,8 @@ errcode_t ext2fs_mmp_read(ext2_filsys fs, blk64_t mmp_blk, void *buf)
 	struct mmp_struct *mmp_cmp;
 	errcode_t retval = 0;
 
-	if ((mmp_blk <= fs->super->s_first_data_block) ||
-	    (mmp_blk >= ext2fs_blocks_count(fs->super)))
+	if ((gid_get_lid(mmp_blk) <= fs->super->s_first_data_block) ||
+	    (gid_get_lid(mmp_blk) >= ext2fs_blocks_count(fs->super)))
 		return EXT2_ET_MMP_BAD_BLOCK;
 
 	/* ext2fs_open() reserves fd0,1,2 to avoid stdio collision, so checking

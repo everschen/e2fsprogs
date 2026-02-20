@@ -435,7 +435,7 @@ static int check_dot(e2fsck_t ctx,
 			created = 1;
 		}
 	}
-	if (dirent->inode != ino) {
+	if (gid_get_lid(dirent->inode) != gid_get_lid(ino)) {
 		if (fix_problem(ctx, PR_2_BAD_INODE_DOT, pctx)) {
 			dirent->inode = ino;
 			status = 1;
@@ -487,7 +487,7 @@ static int check_dotdot(e2fsck_t ctx,
 	unsigned int	rec_len;
 	int		ftype = EXT2_FT_DIR;
 
-	if (!dirent->inode)
+	if (!gid_get_lid(dirent->inode))
 		problem = PR_2_MISSING_DOT_DOT;
 	else if ((ext2fs_dirent_name_len(dirent) != 2) ||
 		 (dirent->name[0] != '.') ||
@@ -518,7 +518,7 @@ static int check_dotdot(e2fsck_t ctx,
 		}
 		return 0;
 	}
-	if (e2fsck_dir_info_set_dotdot(ctx, ino, dirent->inode)) {
+	if (e2fsck_dir_info_set_dotdot(ctx, gid_get_lid(ino), gid_get_lid(dirent->inode))) {
 		fix_problem(ctx, PR_2_NO_DIRINFO, pctx);
 		return -1;
 	}
@@ -1452,13 +1452,13 @@ skip_checksum:
 		 * Make sure the inode listed is a legal one.
 		 */
 		name_len = ext2fs_dirent_name_len(dirent);
-		if (((dirent->inode != EXT2_ROOT_INO) &&
-		     (dirent->inode < EXT2_FIRST_INODE(fs->super))) ||
-		    (dirent->inode > fs->super->s_inodes_count) ||
-		    (dirent->inode == fs->super->s_usr_quota_inum) ||
-		    (dirent->inode == fs->super->s_grp_quota_inum) ||
-		    (dirent->inode == fs->super->s_prj_quota_inum) ||
-		    (dirent->inode == fs->super->s_orphan_file_inum)) {
+		if (((gid_get_lid(dirent->inode) != EXT2_ROOT_INO) &&
+		     (gid_get_lid(dirent->inode) < EXT2_FIRST_INODE(fs->super))) ||
+		    (gid_get_lid(dirent->inode) > fs->super->s_inodes_count) ||
+		    (gid_get_lid(dirent->inode) == fs->super->s_usr_quota_inum) ||
+		    (gid_get_lid(dirent->inode) == fs->super->s_grp_quota_inum) ||
+		    (gid_get_lid(dirent->inode) == fs->super->s_prj_quota_inum) ||
+		    (gid_get_lid(dirent->inode) == fs->super->s_orphan_file_inum)) {
 			problem = PR_2_BAD_INO;
 		} else if (ctx->inode_bb_map &&
 			   (ext2fs_test_inode_bitmap2(ctx->inode_bb_map,
@@ -1576,8 +1576,8 @@ skip_checksum:
 				if (problem == PR_2_BAD_INO)
 					goto next;
 			}
-		} else if (dirent->inode >= first_unused_inode) {
-			pctx.num = dirent->inode;
+		} else if (gid_get_lid(dirent->inode) >= first_unused_inode) {
+			pctx.num = gid_get_lid(dirent->inode);
 			if (fix_problem(ctx, PR_2_INOREF_IN_UNUSED, &cd->pctx)){
 				ext2fs_bg_itable_unused_set(fs, group, 0);
 				ext2fs_group_desc_csum_set(fs, group);
@@ -1669,15 +1669,15 @@ skip_checksum:
 		 */
 		if ((dot_state > 1) &&
 		    (ext2fs_test_inode_bitmap2(ctx->inode_dir_map,
-					      dirent->inode))) {
-			if (e2fsck_dir_info_get_parent(ctx, dirent->inode,
+					      gid_get_lid(dirent->inode)))) {
+			if (e2fsck_dir_info_get_parent(ctx, gid_get_lid(dirent->inode),
 						       &subdir_parent)) {
-				cd->pctx.ino = dirent->inode;
+				cd->pctx.ino = gid_get_lid(dirent->inode);
 				fix_problem(ctx, PR_2_NO_DIRINFO, &cd->pctx);
 				goto abort_free_dict;
 			}
-			if (subdir_parent) {
-				cd->pctx.ino2 = subdir_parent;
+			if (gid_get_lid(subdir_parent)) {
+				cd->pctx.ino2 = gid_get_lid(subdir_parent);
 				if (fix_problem(ctx, PR_2_LINK_DIR,
 						&cd->pctx)) {
 					dirent->inode = 0;
@@ -1859,8 +1859,8 @@ static int deallocate_inode_block(ext2_filsys fs,
 		return 0;
 
 	p->last_cluster = cluster;
-	if ((*block_nr < fs->super->s_first_data_block) ||
-	    (*block_nr >= ext2fs_blocks_count(fs->super)))
+	if ((gid_get_lid(*block_nr) < fs->super->s_first_data_block) ||
+	    (gid_get_lid(*block_nr) >= ext2fs_blocks_count(fs->super)))
 		return 0;
 
         ext2fs_block_alloc_stats2(fs, *block_nr, -1);

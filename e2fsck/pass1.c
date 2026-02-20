@@ -234,8 +234,8 @@ int e2fsck_pass1_check_symlink(ext2_filsys fs, ext2_ino_t ino,
 					return 0;
 		}
 
-		if (blk < fs->super->s_first_data_block ||
-		    blk >= ext2fs_blocks_count(fs->super))
+		if (gid_get_lid(blk) < fs->super->s_first_data_block ||
+		    gid_get_lid(blk) >= ext2fs_blocks_count(fs->super))
 			return 0;
 
 		if (io_channel_read_blk64(fs->io, blk, 1, buf))
@@ -801,10 +801,10 @@ static void check_is_really_dir(e2fsck_t ctx, struct problem_context *pctx,
 			if (i >= 4)
 				not_device++;
 
-			if (blk < ctx->fs->super->s_first_data_block ||
-			    blk >= ext2fs_blocks_count(ctx->fs->super) ||
+			if (gid_get_lid(blk) < ctx->fs->super->s_first_data_block ||
+			    gid_get_lid(blk) >= ext2fs_blocks_count(ctx->fs->super) ||
 			    ext2fs_fast_test_block_bitmap2(ctx->block_found_map,
-							   blk))
+							   gid_get_lid(blk)))
 				return;	/* Invalid block, can't be dir */
 		}
 		blk = inode->i_block[0];
@@ -1899,6 +1899,7 @@ void e2fsck_pass1(e2fsck_t ctx)
 					failed_csum = 0;
 				}
 			}
+
 			check_blocks(ctx, &pctx, block_buf, NULL);
 			FINISH_INODE_LOOP(ctx, ino, &pctx, failed_csum);
 			continue;
@@ -2018,6 +2019,7 @@ void e2fsck_pass1(e2fsck_t ctx)
 				continue;
 			} else if (ext2fs_is_fast_symlink(inode)) {
 				ctx->fs_fast_symlinks_count++;
+				ECFS_OUTPUT("error here? block_buf=%p", block_buf);
 				check_blocks(ctx, &pctx, block_buf,
 					     &ea_ibody_quota);
 				FINISH_INODE_LOOP(ctx, ino, &pctx, failed_csum);
@@ -2265,6 +2267,7 @@ static void process_inodes(e2fsck_t ctx, char *block_buf)
 		sprintf(buf, _("reading indirect blocks of inode %llu"),
 			pctx.ino);
 		ehandler_operation(buf);
+		ECFS_OUTPUT("error here? block_buf=%p", block_buf);
 		check_blocks(ctx, &pctx, block_buf,
 			     &inodes_to_process[i].ea_ibody_quota);
 		if (ctx->flags & E2F_FLAG_SIGNAL_MASK)
@@ -2520,8 +2523,8 @@ static int check_ext_attr(e2fsck_t ctx, struct problem_context *pctx,
 	 * then the inode is also corrupted.
 	 */
 	if (!ext2fs_has_feature_xattr(fs->super) ||
-	    (blk < fs->super->s_first_data_block) ||
-	    (blk >= ext2fs_blocks_count(fs->super))) {
+	    (gid_get_lid(blk) < fs->super->s_first_data_block) ||
+	    (gid_get_lid(blk) >= ext2fs_blocks_count(fs->super))) {
 		mark_inode_bad(ctx, ino);
 		return 0;
 	}
@@ -2787,9 +2790,9 @@ static int handle_htree(e2fsck_t ctx, struct problem_context *pctx,
 	pctx->errcode = ext2fs_bmap2(fs, ino, inode, 0, 0, 0, 0, &blk);
 
 	if ((pctx->errcode) ||
-	    (blk == 0) ||
-	    (blk < fs->super->s_first_data_block) ||
-	    (blk >= ext2fs_blocks_count(fs->super))) {
+	    (gid_get_lid(blk) == 0) ||
+	    (gid_get_lid(blk) < fs->super->s_first_data_block) ||
+	    (gid_get_lid(blk) >= ext2fs_blocks_count(fs->super))) {
 		if (fix_problem(ctx, PR_1_HTREE_BADROOT, pctx))
 			return 1;
 		else
@@ -2984,9 +2987,9 @@ static void scan_extent_node(e2fsck_t ctx, struct problem_context *pctx,
 		pctx->num = extent.e_len;
 		pctx->blkcount = extent.e_lblk + extent.e_len;
 
-		if (extent.e_pblk == 0 ||
-		    extent.e_pblk < ctx->fs->super->s_first_data_block ||
-		    extent.e_pblk >= ext2fs_blocks_count(ctx->fs->super))
+		if (gid_get_lid(extent.e_pblk) == 0 ||
+		    gid_get_lid(extent.e_pblk) < ctx->fs->super->s_first_data_block ||
+		    gid_get_lid(extent.e_pblk) >= ext2fs_blocks_count(ctx->fs->super))
 			problem = PR_1_EXTENT_BAD_START_BLK;
 		else if (extent.e_lblk < start_block)
 			problem = PR_1_OUT_OF_ORDER_EXTENTS;
@@ -3481,6 +3484,7 @@ static void check_blocks(e2fsck_t ctx, struct problem_context *pctx,
 	pb.ino = ino;
 	pb.num_blocks = EXT2FS_B2C(ctx->fs,
 				   ea_ibody_quota ? ea_ibody_quota->blocks : 0);
+
 	pb.last_block = ~0;
 	pb.last_init_lblock = -1;
 	pb.last_db_block = -1;
@@ -3510,10 +3514,14 @@ static void check_blocks(e2fsck_t ctx, struct problem_context *pctx,
 	}
 
 	if (inlinedata_fs && (inode->i_flags & EXT4_INLINE_DATA_FL))
+	{
 		check_blocks_inline_data(ctx, pctx, &pb);
+	}
 	else if (ext2fs_inode_has_valid_blocks2(fs, inode)) {
 		if (extent_fs && (inode->i_flags & EXT4_EXTENTS_FL))
+		{
 			check_blocks_extents(ctx, pctx, &pb);
+		}		
 		else {
 			int flags;
 			/*
@@ -3557,6 +3565,7 @@ static void check_blocks(e2fsck_t ctx, struct problem_context *pctx,
 			}
 		}
 	}
+
 	end_problem_latch(ctx, PR_LATCH_BLOCK);
 	end_problem_latch(ctx, PR_LATCH_TOOBIG);
 	if (ctx->flags & E2F_FLAG_SIGNAL_MASK)
@@ -3609,10 +3618,13 @@ static void check_blocks(e2fsck_t ctx, struct problem_context *pctx,
 	}
 
 	if (!ext2fs_has_feature_huge_file(fs->super) ||
-	    !(inode->i_flags & EXT4_HUGE_FILE_FL))
-		pb.num_blocks *= (fs->blocksize / 512);
+	    !(inode->i_flags & EXT4_HUGE_FILE_FL)){
+			pb.num_blocks *= (fs->blocksize / 512);
+		}
+		
 	pb.num_blocks *= EXT2FS_CLUSTER_RATIO(fs);
-#if 0
+
+#if 1
 	printf("inode %u, i_size = %u, last_block = %llu, i_blocks=%llu, num_blocks = %llu\n",
 	       ino, inode->i_size, (unsigned long long) pb.last_block,
 	       (unsigned long long) ext2fs_inode_i_blocks(fs, inode),
@@ -3858,8 +3870,8 @@ static int process_block(ext2_filsys fs,
 	if (!p->is_dir && !p->is_reg && blockcnt > 0)
 		problem = PR_1_TOOBIG_SYMLINK;
 
-	if (blk < fs->super->s_first_data_block ||
-	    blk >= ext2fs_blocks_count(fs->super))
+	if (gid_get_lid(blk) < fs->super->s_first_data_block ||
+	    gid_get_lid(blk) >= ext2fs_blocks_count(fs->super))
 		problem = PR_1_ILLEGAL_BLOCK_NUM;
 
 	/*
@@ -4017,8 +4029,8 @@ static int process_bad_block(ext2_filsys fs,
 	pctx->blk = blk;
 	pctx->blkcount = blockcnt;
 
-	if ((blk < fs->super->s_first_data_block) ||
-	    (blk >= ext2fs_blocks_count(fs->super))) {
+	if ((gid_get_lid(blk) < fs->super->s_first_data_block) ||
+	    (gid_get_lid(blk) >= ext2fs_blocks_count(fs->super))) {
 		if (fix_problem(ctx, PR_1_BB_ILLEGAL_BLOCK_NUM, pctx)) {
 			*block_nr = 0;
 			return BLOCK_CHANGED;

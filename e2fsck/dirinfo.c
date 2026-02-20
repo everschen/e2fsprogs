@@ -209,6 +209,7 @@ static struct dir_info *e2fsck_get_dir_info(e2fsck_t ctx, ext2_ino_t ino)
 	if (!db)
 		return 0;
 
+	ino = gid_get_lid(ino);
 #ifdef DIRINFO_DEBUG
 	printf("e2fsck_get_dir_info %u...", ino);
 #endif
@@ -220,6 +221,7 @@ static struct dir_info *e2fsck_get_dir_info(e2fsck_t ctx, ext2_ino_t ino)
 		struct dir_info_ent	*buf;
 
 		key.dptr = (unsigned char *) &ino;
+		ECFS_OUTPUT("error here? ino=%llx", ino);
 		key.dsize = sizeof(ext2_ino_t);
 
 		data = tdb_fetch(db->tdb, key);
@@ -310,6 +312,7 @@ static void e2fsck_put_dir_info(e2fsck_t ctx EXT2FS_NO_TDB_UNUSED,
 	key.dsize = sizeof(ext2_ino_t);
 	data.dptr = (unsigned char *) &buf;
 	data.dsize = sizeof(buf);
+	ECFS_OUTPUT("error here? dir->ino=%llx dir->parent=%llx", dir->ino, dir->parent);
 
 	if (tdb_store(db->tdb, key, data, TDB_REPLACE) == -1) {
 		printf("store failed: %s\n", tdb_errorstr(db->tdb));
@@ -400,6 +403,7 @@ struct dir_info *e2fsck_dir_info_iter(e2fsck_t ctx, struct dir_info_iter *iter)
 		}
 		buf = (struct dir_info_ent *) data.dptr;
 		ret_dir_info.ino = *((ext2_ino_t *) iter->tdb_iter.dptr);
+		ECFS_OUTPUT("error here? ret_dir_info.ino=%llx", ret_dir_info.ino);
 		ret_dir_info.dotdot = buf->dotdot;
 		ret_dir_info.parent = buf->parent;
 		iter->tdb_iter = tdb_nextkey(ctx->dir_info->tdb, key);
@@ -431,8 +435,10 @@ int e2fsck_dir_info_set_parent(e2fsck_t ctx, ext2_ino_t ino,
 	struct dir_info *p;
 
 	p = e2fsck_get_dir_info(ctx, ino);
-	if (!p)
+	if (!p){
 		return 1;
+	}
+		
 	p->parent = parent;
 	e2fsck_put_dir_info(ctx, p);
 	return 0;

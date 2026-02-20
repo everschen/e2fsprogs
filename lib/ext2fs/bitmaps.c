@@ -104,11 +104,13 @@ errcode_t ext2fs_allocate_block_bitmap(ext2_filsys fs,
 	real_end = ((__u64) EXT2_CLUSTERS_PER_GROUP(fs->super)
 		    * (__u64) fs->group_desc_count)-1 + start;
 
-	if (fs->flags & EXT2_FLAG_64BITS)
+	if (fs->flags & EXT2_FLAG_64BITS) {
 		return (ext2fs_alloc_generic_bmap(fs,
-				EXT2_ET_MAGIC_BLOCK_BITMAP64,
-				fs->default_bitmap_type,
-				start, end, real_end, descr, ret));
+			EXT2_ET_MAGIC_BLOCK_BITMAP64,
+			fs->default_bitmap_type,
+			start, end, real_end, descr, ret));
+	}
+
 
 	if ((end > ~0U) || (real_end > ~0U))
 		return EXT2_ET_CANT_USE_LEGACY_BITMAPS;

@@ -409,9 +409,9 @@ static int block_map_looks_insane(ext2_filsys fs,
 
 	/* See if more than half the block maps are insane */
 	for (i = 0, bad = 0; i < EXT2_N_BLOCKS; i++)
-		if (inode->i_block[i] != 0 &&
-		    (inode->i_block[i] < fs->super->s_first_data_block ||
-		     inode->i_block[i] >= ext2fs_blocks_count(fs->super)))
+		if (gid_get_lid(inode->i_block[i]) != 0 &&
+		    (gid_get_lid(inode->i_block[i]) < fs->super->s_first_data_block ||
+		     gid_get_lid(inode->i_block[i]) >= ext2fs_blocks_count(fs->super)))
 			bad++;
 	return bad > EXT2_N_BLOCKS / 2;
 }
@@ -785,7 +785,7 @@ errcode_t ext2fs_read_inode2(ext2_filsys fs, ext2_ino_t ino,
 		if (retval != EXT2_ET_CALLBACK_NOTHANDLED)
 			return retval;
 	}
-	if ((ino == 0) || (fid_get_ino(ino) > fs->super->s_inodes_count))
+	if ((gid_get_lid(ino) == 0) || (gid_get_lid(ino) > fs->super->s_inodes_count))
 		return EXT2_ET_BAD_INODE_NUM;
 	/* Create inode cache if not present */
 	if (!fs->icache) {
@@ -804,22 +804,22 @@ errcode_t ext2fs_read_inode2(ext2_filsys fs, ext2_ino_t ino,
 	if (fs->flags & EXT2_FLAG_IMAGE_FILE) {
 		inodes_per_block = fs->blocksize / EXT2_INODE_SIZE(fs->super);
 		block_nr = ext2fs_le32_to_cpu(fs->image_header->offset_inode) / fs->blocksize;
-		block_nr += (fid_get_ino(ino) - 1) / inodes_per_block;
-		offset = ((fid_get_ino(ino) - 1) % inodes_per_block) *
+		block_nr += (gid_get_lid(ino) - 1) / inodes_per_block;
+		offset = ((gid_get_lid(ino) - 1) % inodes_per_block) *
 			EXT2_INODE_SIZE(fs->super);
 		io = fs->image_io;
 	} else {
-		group = (fid_get_ino(ino) - 1) / EXT2_INODES_PER_GROUP(fs->super);
+		group = (gid_get_lid(ino) - 1) / EXT2_INODES_PER_GROUP(fs->super);
 		if (group > fs->group_desc_count)
 			return EXT2_ET_BAD_INODE_NUM;
-		offset = ((fid_get_ino(ino) - 1) % EXT2_INODES_PER_GROUP(fs->super)) *
+		offset = ((gid_get_lid(ino) - 1) % EXT2_INODES_PER_GROUP(fs->super)) *
 			EXT2_INODE_SIZE(fs->super);
 		block = offset >> EXT2_BLOCK_SIZE_BITS(fs->super);
 		block_nr = ext2fs_inode_table_loc(fs, group);
-		if (!block_nr)
+		if (!gid_get_lid(block_nr))
 			return EXT2_ET_MISSING_INODE_TABLE;
-		if ((block_nr < fs->super->s_first_data_block) ||
-		    (block_nr + fs->inode_blocks_per_group - 1 >=
+		if ((gid_get_lid(block_nr) < fs->super->s_first_data_block) ||
+		    (gid_get_lid(block_nr) + fs->inode_blocks_per_group - 1 >=
 		     ext2fs_blocks_count(fs->super)))
 			return EXT2_ET_GDESC_BAD_INODE_TABLE;
 		block_nr += block;
@@ -916,7 +916,7 @@ errcode_t ext2fs_write_inode2(ext2_filsys fs, ext2_ino_t ino,
 			return retval;
 	}
 
-	if ((ino == 0) || (fid_get_ino(ino) > fs->super->s_inodes_count))
+	if ((gid_get_lid(ino) == 0) || (gid_get_lid(ino) > fs->super->s_inodes_count))
 		return EXT2_ET_BAD_INODE_NUM;
 
 	/* Prepare our shadow buffer for read/modify/byteswap/write */
@@ -963,8 +963,8 @@ errcode_t ext2fs_write_inode2(ext2_filsys fs, ext2_ino_t ino,
 			goto errout;
 	}
 
-	group = (fid_get_ino(ino) - 1) / EXT2_INODES_PER_GROUP(fs->super);
-	offset = ((fid_get_ino(ino) - 1) % EXT2_INODES_PER_GROUP(fs->super)) *
+	group = (gid_get_lid(ino) - 1) / EXT2_INODES_PER_GROUP(fs->super);
+	offset = ((gid_get_lid(ino) - 1) % EXT2_INODES_PER_GROUP(fs->super)) *
 		EXT2_INODE_SIZE(fs->super);
 	block = offset >> EXT2_BLOCK_SIZE_BITS(fs->super);
 	block_nr = ext2fs_inode_table_loc(fs, (unsigned) group);
@@ -972,8 +972,8 @@ errcode_t ext2fs_write_inode2(ext2_filsys fs, ext2_ino_t ino,
 		retval = EXT2_ET_MISSING_INODE_TABLE;
 		goto errout;
 	}
-	if ((block_nr < fs->super->s_first_data_block) ||
-	    (block_nr + fs->inode_blocks_per_group - 1 >=
+	if ((gid_get_lid(block_nr) < fs->super->s_first_data_block) ||
+	    (gid_get_lid(block_nr) + fs->inode_blocks_per_group - 1 >=
 	     ext2fs_blocks_count(fs->super))) {
 		retval = EXT2_ET_GDESC_BAD_INODE_TABLE;
 		goto errout;
@@ -1082,7 +1082,7 @@ errcode_t ext2fs_get_blocks(ext2_filsys fs, ext2_ino_t ino, blk_t *blocks)
 
 	EXT2_CHECK_MAGIC(fs, EXT2_ET_MAGIC_EXT2FS_FILSYS);
 
-	if (fid_get_ino(ino) > fs->super->s_inodes_count)
+	if (gid_get_lid(ino) > fs->super->s_inodes_count)
 		return EXT2_ET_BAD_INODE_NUM;
 
 	if (fs->get_blocks) {
@@ -1104,8 +1104,8 @@ errcode_t ext2fs_check_directory(ext2_filsys fs, ext2_ino_t ino)
 
 	EXT2_CHECK_MAGIC(fs, EXT2_ET_MAGIC_EXT2FS_FILSYS);
 
-	ECFS_DEBUG("fid_get_ino(ino)=%lld fs->super->s_inodes_count=%d", fid_get_ino(ino), fs->super->s_inodes_count);
-	if (fid_get_ino(ino) > fs->super->s_inodes_count)
+	ECFS_DEBUG("gid_get_lid(ino)=%lld fs->super->s_inodes_count=%d", gid_get_lid(ino), fs->super->s_inodes_count);
+	if (gid_get_lid(ino) > fs->super->s_inodes_count)
 	{
 		return EXT2_ET_BAD_INODE_NUM;
 	}

@@ -101,7 +101,7 @@ void quota_set_sb_inum(ext2_filsys fs, ext2_ino_t ino, enum quota_type qtype)
 		 qtype);
 	if (inump == NULL)
 		return;
-	*inump = fid_get_ino(ino);
+	*inump = gid_get_lid(ino);
 	ext2fs_mark_super_dirty(fs);
 }
 

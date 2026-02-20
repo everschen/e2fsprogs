@@ -62,7 +62,7 @@ errcode_t ext2fs_new_dir_block(ext2_filsys fs, ext2_ino_t dir_ino,
 		/*
 		 * Set up entry for '.'
 		 */
-		dir_ino = make_fid_sb(fs->super, dir_ino);
+		dir_ino = make_gid_sb(fs->super, dir_ino);
 		dir->inode = dir_ino;
 		ext2fs_dirent_set_name_len(dir, 1);
 		ext2fs_dirent_set_file_type(dir, filetype);
@@ -81,7 +81,7 @@ errcode_t ext2fs_new_dir_block(ext2_filsys fs, ext2_ino_t dir_ino,
 			ext2fs_free_mem(&buf);
 			return retval;
 		}
-		parent_ino = make_fid_sb(fs->super, parent_ino);
+		parent_ino = make_gid_sb(fs->super, parent_ino);
 		dir->inode = parent_ino;
 		ext2fs_dirent_set_name_len(dir, 2);
 		ext2fs_dirent_set_file_type(dir, filetype);
@@ -112,7 +112,7 @@ errcode_t ext2fs_new_dir_inline_data(ext2_filsys fs,
 
 	EXT2_CHECK_MAGIC(fs, EXT2_ET_MAGIC_EXT2FS_FILSYS);
 
-	iblock[0] = ext2fs_cpu_to_le64(make_fid_sb(fs->super, parent_ino));
+	iblock[0] = ext2fs_cpu_to_le64(make_gid_sb(fs->super, parent_ino));
 
 	dir = (struct ext2_dir_entry *)((char *)iblock +
 					EXT4_INLINE_DATA_DOTDOT_SIZE);

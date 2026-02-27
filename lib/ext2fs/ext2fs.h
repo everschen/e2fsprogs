@@ -432,6 +432,8 @@ struct ext2fs_extent {
 	blk64_t	e_lblk;		/* first logical block extent covers */
 	__u32	e_len;		/* number of blocks covered by extent */
 	__u32	e_flags;	/* extent flags */
+	__u16	e_node;	    /* extent node id*/
+	__u16	e_disk;	    /* extent disk id */
 };
 
 typedef struct ext2_extent_handle *ext2_extent_handle_t;

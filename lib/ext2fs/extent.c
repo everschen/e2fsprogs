@@ -97,7 +97,9 @@ static void dbg_show_index(struct ext3_extent_idx *ix)
 
 static void dbg_show_extent(struct ext3_extent *ex)
 {
-	printf("extent: block=%u-%u len=%u start=%u start_hi=%u\n",
+	printf("extent: node_id=%u disk_id=%u block=%u-%u len=%u start=%u start_hi=%u\n",
+			ext2fs_le16_to_cpu(ex->ee_node_id),
+			ext2fs_le16_to_cpu(ex->ee_disk_id),
 			ext2fs_le32_to_cpu(ex->ee_block),
 			ext2fs_le32_to_cpu(ex->ee_block) +
 			ext2fs_le16_to_cpu(ex->ee_len) - 1,
@@ -110,8 +112,8 @@ static void dbg_print_extent(char *desc, struct ext2fs_extent *extent)
 {
 	if (desc)
 		printf("%s: ", desc);
-	printf("extent: lblk %llu--%llu, len %u, pblk %llu, flags: ",
-	       extent->e_lblk, extent->e_lblk + extent->e_len - 1,
+	printf("extent: node %u, disk %u, lblk %llu--%llu, len %u, pblk %llu, flags: ",
+	       extent->e_node, extent->e_disk, extent->e_lblk, extent->e_lblk + extent->e_len - 1,
 	       extent->e_len, extent->e_pblk);
 	if (extent->e_flags & EXT2_EXTENT_FLAGS_LEAF)
 		fputs("LEAF ", stdout);
@@ -568,6 +570,8 @@ retry:
 	if (handle->level == handle->max_depth) {
 		ex = (struct ext3_extent *) ix;
 
+		extent->e_node = ext2fs_le16_to_cpu(ex->ee_node);
+		extent->e_disk = ext2fs_le16_to_cpu(ex->ee_disk);
 		extent->e_pblk = ext2fs_le32_to_cpu(ex->ee_start) +
 			((__u64) ext2fs_le16_to_cpu(ex->ee_start_hi) << 32);
 		extent->e_lblk = ext2fs_le32_to_cpu(ex->ee_block);
@@ -578,6 +582,8 @@ retry:
 			extent->e_flags |= EXT2_EXTENT_FLAGS_UNINIT;
 		}
 	} else {
+		extent->e_node = ext2fs_le16_to_cpu(ix->ei_node);
+		extent->e_disk = ext2fs_le16_to_cpu(ix->ei_disk);
 		extent->e_pblk = ext2fs_le32_to_cpu(ix->ei_leaf) +
 			((__u64) ext2fs_le16_to_cpu(ix->ei_leaf_hi) << 32);
 		extent->e_lblk = ext2fs_le32_to_cpu(ix->ei_block);
@@ -877,6 +883,9 @@ errcode_t ext2fs_extent_replace(ext2_extent_handle_t handle,
 	if (handle->level == handle->max_depth) {
 		ex = path->curr;
 
+		//node_id and disk_id need to set for this case? no fs superblock info here.
+		ex->ee_node = ext2fs_cpu_to_le16(extent->e_node);
+		ex->ee_disk = ext2fs_cpu_to_le16(extent->e_disk);
 		ex->ee_block = ext2fs_cpu_to_le32(extent->e_lblk);
 		ex->ee_start = ext2fs_cpu_to_le32(extent->e_pblk & 0xFFFFFFFF);
 		ex->ee_start_hi = ext2fs_cpu_to_le16(extent->e_pblk >> 32);
@@ -892,7 +901,8 @@ errcode_t ext2fs_extent_replace(ext2_extent_handle_t handle,
 		}
 	} else {
 		ix = path->curr;
-
+		ix->ei_node = ext2fs_cpu_to_le16(extent->e_node);
+		ix->ei_disk = ext2fs_cpu_to_le16(extent->e_disk);
 		ix->ei_leaf = ext2fs_cpu_to_le32(extent->e_pblk & 0xFFFFFFFF);
 		ix->ei_leaf_hi = ext2fs_cpu_to_le16(extent->e_pblk >> 32);
 		ix->ei_block = ext2fs_cpu_to_le32(extent->e_lblk);
@@ -932,6 +942,8 @@ static errcode_t extent_node_split(ext2_extent_handle_t handle,
 	blk64_t				new_node_pblk;
 	blk64_t				new_node_start;
 	blk64_t				orig_lblk;
+	int				orig_node;
+	int				orig_disk;
 	blk64_t				goal_blk = 0;
 	int				orig_height;
 	char				*block_buf = NULL;
@@ -966,6 +978,8 @@ static errcode_t extent_node_split(ext2_extent_handle_t handle,
 	/* save the position we were originally splitting... */
 	orig_height = info.max_depth - info.curr_level;
 	orig_lblk = extent.e_lblk;
+	orig_node = extent.e_node;
+	orig_disk = extent.e_disk;
 
 	/* Try to put the index block before the first extent */
 	path = handle->path + handle->level;
@@ -1136,6 +1150,8 @@ static errcode_t extent_node_split(ext2_extent_handle_t handle,
 		if (retval)
 			goto done;
 
+		extent.e_node = orig_node;
+		extent.e_disk = orig_disk;
 		extent.e_lblk = new_node_start;
 		extent.e_pblk = new_node_pblk;
 		extent.e_len = handle->path[0].end_blk - extent.e_lblk;
@@ -1154,6 +1170,8 @@ static errcode_t extent_node_split(ext2_extent_handle_t handle,
 			goto done;
 
 		/* now set up the new extent and insert it */
+		extent.e_node = orig_node;
+		extent.e_disk = orig_disk;
 		extent.e_lblk = new_node_start;
 		extent.e_pblk = new_node_pblk;
 		extent.e_len = new_node_length;
@@ -1326,6 +1344,8 @@ errcode_t ext2fs_extent_set_bmap(ext2_extent_handle_t handle,
 	/* if (re)mapping, set up new extent to insert */
 	if (physical) {
 		newextent.e_len = 1;
+		newextent.e_node = handle->fs->super->s_node_id;
+		newextent.e_disk = handle->fs->super->s_disk_id;
 		newextent.e_pblk = physical;
 		newextent.e_lblk = logical;
 		newextent.e_flags = EXT2_EXTENT_FLAGS_LEAF;
@@ -1841,6 +1861,8 @@ errcode_t ext2fs_decode_extent(struct ext2fs_extent *to, void *addr, int len)
 	if (len != sizeof(struct ext3_extent))
 		return EXT2_ET_INVALID_ARGUMENT;
 
+	to->e_node = ext2fs_le16_to_cpu(from->ee_node);
+	to->e_disk = ext2fs_le16_to_cpu(from->ee_disk);
 	to->e_pblk = ext2fs_le32_to_cpu(from->ee_start) +
 		((__u64) ext2fs_le16_to_cpu(from->ee_start_hi)
 			<< 32);
